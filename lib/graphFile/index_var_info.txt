@@ -1,0 +1,13 @@
+2	0.main.&%b
+5	0.main.&%c
+6	0.main.%x-1
+12	0.main.&%0
+3	0.main.%z-1
+0	0.main.%y-1
+4	0.main.%c
+1	0.main.%b
+10	0.main.*%x-1
+7	0.main.%v-1
+11	0.main.%0
+9	0.main.%w-1
+8	0.main.*%y-1
