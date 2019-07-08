@@ -170,7 +170,7 @@ public:
     	return number_edges;
     }
 
-    void print(std::ostream& str) const override {
+    void print(std::ostream& str) const override {              //##为什么这里的print没有重写<<
     	str << "The number of nodes in CFG: \t" << this->nodes.size() << "\n";
     	str << "The number of edges in CFG: \t" << this->getNumberEdges() << "\n";
     	for(auto it = this->succes.begin(); it != this->succes.end(); ++it){
@@ -186,7 +186,7 @@ private:
 
     std::vector<CFGNode*> nodes;
 
-    std::vector<CFGNode*> nodes_entry;
+    std::vector<CFGNode*> nodes_entry;          //## node_entry和node有什么关系
 
     vertexid_t number_edges = 0;
 

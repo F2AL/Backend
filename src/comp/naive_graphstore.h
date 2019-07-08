@@ -51,14 +51,14 @@ public:
     	}
 
     	//for debugging
-//    	Logger::print_thread_info_locked("retrieve finished.\n", LEVEL_LOG_FUNCTION);
+    	Logger::print_thread_info_locked("retrieve finished.\n", LEVEL_LOG_FUNCTION);
 
     	return out;
     }
 
     //deep copy; locked version for asynchronous mode
     void update_locked(PEGraph_Pointer graph_pointer, PEGraph* pegraph) {
-    	std::lock_guard<std::mutex> lockGuard(mutex);
+    	std::lock_guard<std::mutex> lockGuard(mutex);           //##上锁，这里为啥这么用呢？
     	update(graph_pointer, pegraph);
     }
 
@@ -94,7 +94,7 @@ public:
     	this->map.clear();
     }
 
-    void clear(){
+    void clear(){                       /*##应该是在析构函数中调用此处*/
     	for(auto it = map.begin(); it != map.end(); ){
     		delete it->second;
     		it = map.erase(it);

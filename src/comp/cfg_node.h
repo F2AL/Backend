@@ -26,7 +26,7 @@ public:
     stmt = _stmt;
     }
 
-    ~CFGNode(){}
+    ~CFGNode(){}            //##为什么没有把stmt给析构了
 
 
     inline Stmt* getStmt(){
@@ -37,7 +37,7 @@ public:
 //		return in_pointer;
 //	}
 
-    inline PEGraph_Pointer getOutPointer() const {
+    inline PEGraph_Pointer getOutPointer() const {          //## getOutPointer和getCfgNodeId应该内容一样，只是使用的地方不同
         return id;
     }
 

@@ -49,7 +49,7 @@ public:
     Stmt(TYPE t, vertexid_t src, vertexid_t dst, vertexid_t added = -1) : t(t), src(src), dst(dst), added(added) {}
 
 
-    std::string toString(){
+    std::string toString(){     //## 这里和<< 操作符有什么区别吗
     	std::ostringstream out;
     	out << getTypeString(t) << ", " << getDst() << " <- " << getSrc() << ", " << getAdded();
     	return out.str();

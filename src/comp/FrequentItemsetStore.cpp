@@ -14,7 +14,8 @@ FrequentItemsetStore::~FrequentItemsetStore() {
 }
 
 PEGraph *FrequentItemsetStore::retrieve_locked(PEGraph_Pointer graph_pointer) {
-
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    return retrieve(graph_pointer);
 }
 
 PEGraph *FrequentItemsetStore::retrieve(PEGraph_Pointer graph_pointer) {
@@ -47,7 +48,8 @@ void FrequentItemsetStore::update(PEGraph_Pointer graph_pointer, PEGraph *pegrap
 }
 
 void FrequentItemsetStore::update_locked(PEGraph_Pointer graph_pointer, PEGraph *pegraph) {
-
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    update(graph_pointer, pegraph);
 }
 
 // convert from edgeSet to peGraph*

@@ -95,7 +95,7 @@ typedef int PEGraph_Pointer;
 #define NUM_THREADS_CFGCOMPUTE 4
 
 #define LEVEL_LOG_INFO 0
-#define LEVEL_LOG_FUNCTION 0
+#define LEVEL_LOG_FUNCTION 0            //这里是什么意思？
 #define LEVEL_LOG_PEG 0
 #define LEVEL_LOG_GRAPHSTORE 1
 #define LEVEL_LOG_CFGNODE 1
