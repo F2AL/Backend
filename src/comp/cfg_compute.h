@@ -56,7 +56,7 @@ private:
     static PEGraph* combine_synchronous(GraphStore* graphstore, std::vector<CFGNode*>& preds);
 
 
-    static PEGraph* transfer_copy(PEGraph* in, Stmt* stmt,Grammar* grammar, Singletons* singletons);
+    static PEGraph* transfer_copy(PEGraph* in, Stmt* stmt,Grammar* grammar, Singletons* singletons);        //##为什么全部设置为static了, 设置成static我可以理解，但是private就有点不太看得明白了
 
     static PEGraph* transfer_load(PEGraph* in, Stmt* stmt,Grammar* grammar, Singletons* singletons);
 

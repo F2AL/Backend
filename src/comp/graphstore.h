@@ -16,8 +16,8 @@ using namespace std;
 
 class GraphStore{
 
-	friend std::ostream & operator<<(std::ostream & strm, GraphStore& graphstore) {
-		strm << "Graphstore<<<<\n============================================" << endl;
+	friend std::ostream & operator<<(std::ostream & strm, GraphStore& graphstore) {   //## << print toString的关系
+		strm << "Graphstore<<<<\n============================================" << endl;     // 这是在干啥
 		graphstore.print(strm);
 		strm << "============================================" << endl;
 		return strm;
@@ -48,7 +48,7 @@ public:
 
 
 
-    virtual std::string toString(){
+    virtual std::string toString(){         //##还有这种操作吗，在虚函数中调用纯虚函数
     	std::ostringstream strm;
 		strm << "Graphstore<<<<\n============================================" << endl;
 		toString_sub(strm);
