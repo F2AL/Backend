@@ -210,9 +210,9 @@ PEGraph * ART::retrieve(PEGraph_Pointer graph_pointer) {
     if (m.find(graph_pointer)!= m.end()){
         Node* node = m[graph_pointer];
         vector<Edge *> v = retrieveFromLeaf(node);
-        return convertToPEGraph(v);
+        return convertToPEGraph(v);             /*convert from vector<Edge*> to PEGraph* */
     }
-    return nullptr;
+    return new PEGraph();
 }
 
 void ART::edgeSort(vector<vector<Edge *>> &edges) {
