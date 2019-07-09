@@ -260,34 +260,6 @@ void FrequentItemsetStore::handle(set<int> &edgeSet) {
     }
 
 
-    for(const auto& frequentItemset: frequentItemsets){
-
-        edgeSet.count(intToFrequentItemset[1]!=edgeSet.end())
-
-        bool flag = true;           //check if the graphSet need to update
-
-
-        for (auto &elem : frequentItemset) {
-                if (!edgeSet.count(elem)) {
-                    flag = false;
-                    break;
-                }
-            }
-            if (flag) {
-                //              delete the element in FISet
-                for (auto &elem : frequentItemset) {
-                    edgeSet.erase(edgeSet.find(elem));
-                }
-                //              insert a special Edge for the num_p
-                //                Edge newEdge = Edge(-num_p, 0, 0);
-                int newEdge = -num_p;
-                num_p++;
-                intToFrequentItemset[newEdge] = frequentItemset;
-                edgeSet.insert(newEdge);
-            }
-
-    }
-
 }
 
 
