@@ -29,7 +29,7 @@ private:
 
 protected:
 
-    void print(std::ostream& str) const {
+    void print(std::ostream& str) const {           //#为啥这里print没有写
 //    	str << "size=" << this->size() << "; ";
 //		for(auto& it: set){
 //			str << *it << ", ";

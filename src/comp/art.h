@@ -157,7 +157,7 @@ protected:
 private:
     Node *root = new Node();
     std::unordered_map<PEGraph_Pointer, Node *> mapToLeaf;
-    static unordered_map<Edge, int> sortBase;
+    static std::unordered_map<Edge, int> sortBase;
 //    std::set<vertexid_t> singletonSet;
 
     Node *insertNewGraph(PEGraph *pGraph);
@@ -166,6 +166,5 @@ private:
 
     static bool cmp(Edge *a, Edge *b);
 };
-
 
 #endif /* COMP_ART_H_ */

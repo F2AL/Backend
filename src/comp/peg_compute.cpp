@@ -1,6 +1,5 @@
 #include "peg_compute.h"
 
-
 //PEGCompute::PEGCompute() = default;
 
 long PEGCompute::startCompute_delete(ComputationSet *compset, Grammar *grammar, std::unordered_map<vertexid_t, EdgeArray> *m) {

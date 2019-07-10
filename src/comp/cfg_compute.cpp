@@ -14,7 +14,7 @@ bool CFGCompute::load(Partition* part, CFG* cfg, GraphStore* graphstore){
 }
 
 void CFGCompute::do_worklist_synchronous(CFG* cfg, GraphStore* graphstore, Grammar* grammar, Singletons* singletons){
-	Logger::print_thread_info_locked("-------------------------------------------------------------- Start ---------------------------------------------------------------\n\n\n", LEVEL_LOG_MAIN);
+	Logger::print_thread_info_locked("-------------------------------------------------------------- Start ---------------------------------------------------------------\n\n\n", LEVEL_LOG_MAIN);     //##这是在干啥
 
     Concurrent_Worklist<CFGNode*>* worklist_1 = new Concurrent_Workset<CFGNode*>();
 
@@ -29,29 +29,33 @@ void CFGCompute::do_worklist_synchronous(CFG* cfg, GraphStore* graphstore, Gramm
         worklist_1->push_atomic(*it);
     }
 
-    //initiate a temp graphstore to maintain all the updated graphs
-//    GraphStore* tmp_graphstore = new NaiveGraphStore();
-    GraphStore* tmp_graphstore = new ART();
+    //initiate a temp graphstore to maintain all the updated graphs         ##那这里就有问题了啊 graphstore是一点一点添加进来的
+    GraphStore* tmp_graphstore = new NaiveGraphStore();
+//    GraphStore* tmp_graphstore = new ART();
 
     Concurrent_Worklist<CFGNode*>* worklist_2 = new Concurrent_Workset<CFGNode*>();
     while(!worklist_1->isEmpty()){
         //for debugging
         Logger::print_thread_info_locked("--------------------------------------------------------------- superstep starting ---------------------------------------------------------------\n\n", LEVEL_LOG_MAIN);
 
-        std::vector<std::thread> comp_threads;
+        std::vector<std::thread> comp_threads;      // ## 使用多线程编程
         for (unsigned int i = 0; i < NUM_THREADS_CFGCOMPUTE; i++)
-            comp_threads.push_back(std::thread( [=] {compute_synchronous(cfg, graphstore, worklist_1, worklist_2, grammar, tmp_graphstore, singletons);}));
+            comp_threads.push_back(std::thread( [=] {compute_synchronous(cfg, graphstore, worklist_1, worklist_2, grammar, tmp_graphstore, singletons);}));     //## lamda表达式
 
         for (auto &t : comp_threads)
-            t.join();
+            t.join();               // ##join是在做什么?
 
         //synchronize and communicate
 //        update_GraphStore(graphstore, tmp_graphstore);
-        graphstore->update_graphs(tmp_graphstore);
+        graphstore->update_graphs(tmp_graphstore);          //##全局更新,这就有问题了:
+        /*
+         * 如果是一个一个的添加进图,那么边出现的频率可能就无法保证
+         *  从代码来看,好像就是这个样子
+         * */
         tmp_graphstore->clear();
 
         //update worklists
-        assert(worklist_1->isEmpty());
+        assert(worklist_1->isEmpty());          // 如果条件返回错误,则终止程序执行. 怎么能知道worklist1一定为空呢 猜测,应该是因为compute_synchronous已经为空了
         Concurrent_Worklist<CFGNode*>* worklist_tmp = worklist_1;
         worklist_1 = worklist_2;
         worklist_2 = worklist_tmp;
@@ -62,7 +66,7 @@ void CFGCompute::do_worklist_synchronous(CFG* cfg, GraphStore* graphstore, Gramm
     }
 
     //clean
-    delete(worklist_1);
+    delete(worklist_1);             //## 只要是new出来的,就要delete掉
     delete(worklist_2);
 
     delete(tmp_graphstore);
