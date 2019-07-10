@@ -12,12 +12,7 @@ ART::ART(){
 }
 
 ART::~ART() {
-	//TODO
-
-}
-
-void ART::loadGraphStore(const string &file_singleton) {
-
+    clear();
 }
 
 string ART::toString() {
@@ -25,11 +20,23 @@ string ART::toString() {
 }
 
 void ART::print(std::ostream &str) {
-
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    str << "The number of graphs is: " << mapToLeaf.size() << "\n";
+    for(auto & it : mapToLeaf){
+        vector<Edge *> vector= retrieveFromLeaf(it.second);
+        PEGraph* peGraph = convertToPEGraph(vector);
+        str << ">>>>" << it.first << " " << *peGraph << endl;
+    }
 }
 
-void ART::toString_sub(std::ostringstream &strm) {
-
+void ART::toString_sub(std::ostringstream &str) {
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    str << "The number of graphs is: " << mapToLeaf.size() << "\n";
+    for(auto & it : mapToLeaf){
+        vector<Edge *> vector= retrieveFromLeaf(it.second);
+        PEGraph* peGraph = convertToPEGraph(vector);
+        str << ">>>>" << it.first << " " << *peGraph << endl;
+    }
 }
 
 Node *ART::insert(vector<Edge *> &v) {
@@ -51,26 +58,26 @@ Node *ART::insert(vector<Edge *> &v) {
     return parent;
 }
 
-void ART::insert(vector<Edge *> v, Node *root, int begin) {
-    if (v.size() <= begin) {
-        root->leafNum++;                    //mark leaf, if node->leafNum>=1, the node is a leaf.
-        return;
-    }
-    Node *child = nullptr;
-    // if not find , insert new node to the front of the children
-    if (!(child = findChild(root, v[begin]))) {
-        child = new Node();
-        child->data = new Edge(*v[begin]);
-        child->parent = root;
+void ART::addOneGraph(PEGraph_Pointer pointer, PEGraph *graph) {
+    Node* leaf = insertNewGraph(graph);
+    this->mapToLeaf[pointer] = leaf;
+}
 
-        // insert new child to the front of the children
-        child->next = root->children;
-        root->children = child;
+void ART::update_graphs(GraphStore *another) {
+    ART* another_graphstore = dynamic_cast<ART*>(another);
+    for(auto& it: another_graphstore->mapToLeaf){
+        update(it.first, retrieve(it.first));
     }
-    // node->childrenNum++;
+}
 
-    // insert deeper
-    insert(v, child, ++begin);
+void ART::clearEntryOnly() {
+
+}
+
+void ART::clear() {
+    clear_dfs(root, root);
+    //todo 需不需要释放map要看我是浅拷贝还是深拷贝
+
 }
 
 vector<Edge *> ART::retrieveFromLeaf(Node *node) const {
@@ -132,15 +139,19 @@ void ART::del(Node *leaf) {
     }
 }
 
-void ART::DFS(Node *node) {
+void ART::clear_dfs(Node *node, Node *head) {
+    // node is the root
     if (node->children) {
-        DFS(node->children);
+        clear_dfs(node->children, node->children);
     }
     if (node->next) {
-        DFS(node->next);
+        clear_dfs(node->next, head);          //head保持不变
     }
-    //access the edge info
+    //对一整行作析构
+    clearLinkList(head);
 }
+
+
 
 Node *ART::findChild(Node *parent, Edge *child) {
     if (!parent || !child) return nullptr;
@@ -152,24 +163,22 @@ Node *ART::findChild(Node *parent, Edge *child) {
     return nullptr;
 }
 
-PEGraph * ART::convertToPEGraph(vector<Edge *> &v) const {
-    PEGraph* peGraph = new PEGraph;
-    std::unordered_map<vertexid_t, EdgeArray> graph;
+PEGraph * ART::convertToPEGraph(vector<Edge *> &graph) const {
+    auto* peGraph = new PEGraph;
+    std::unordered_map<vertexid_t, EdgeArray> mapToEdgeArray;
 
-    for(auto & edge : v){
+    sort(graph.begin(),graph.end(), cmp);
+    for(auto & edge : graph){
         vertexid_t src = edge->src;
-        vertexid_t dst = edge->des;
+        vertexid_t dst = edge->dst;
         label_t label = edge->label;
-        if(graph.find(src) == graph.end()){
-            graph[src] = EdgeArray();
+        if(mapToEdgeArray.find(src) == mapToEdgeArray.end()){
+            mapToEdgeArray[src] = EdgeArray();
         }
-        graph[src].addOneEdge(edge->des, edge->label);
-
+        mapToEdgeArray[src].addOneEdge(dst, label);
     }
 
-    // todo should we sort the graph?
-
-    peGraph->setGraph(graph);
+    peGraph->setGraph(mapToEdgeArray);
     return peGraph;
 }
 
@@ -191,33 +200,40 @@ vector<Edge *> ART::convertToVector(PEGraph *peGraph) {
 }
 
 void ART::update_locked(PEGraph_Pointer graph_pointer, PEGraph *pegraph) {
-
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    update(graph_pointer, pegraph);
 }
 void ART::update(PEGraph_Pointer graph_pointer, PEGraph *pegraph) {
-    Node *node = m[graph_pointer];
+    Node *node = mapToLeaf[graph_pointer];
     del(node);
-    vector<Edge *> v = convertToVector(pegraph);
-    // todo we can sort v before insert
-    Node *leaf = insert(v);
-    m[graph_pointer] = leaf;
+    vector<Edge *> vector_graph = convertToVector(pegraph);
+    // todo we can sort vector_graph before insert
+    sort(vector_graph.begin(),vector_graph.end(), cmp);
+    Node *leaf = insert(vector_graph);
+    mapToLeaf[graph_pointer] = leaf;
 }
 
 PEGraph * ART::retrieve_locked(PEGraph_Pointer graph_pointer) {
-
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    return retrieve(graph_pointer);
 }
 
 PEGraph * ART::retrieve(PEGraph_Pointer graph_pointer) {
-    if (m.find(graph_pointer)!= m.end()){
-        Node* node = m[graph_pointer];
-        vector<Edge *> v = retrieveFromLeaf(node);
+    if (mapToLeaf.find(graph_pointer)!= mapToLeaf.end()){
+        Node* leaf = mapToLeaf[graph_pointer];
+        vector<Edge *> v = retrieveFromLeaf(leaf);
         return convertToPEGraph(v);             /*convert from vector<Edge*> to PEGraph* */
     }
     return new PEGraph();
 }
 
-void ART::edgeSort(vector<vector<Edge *>> &edges) {
-    unordered_map<Edge, int> sortBase;
-    for (auto &graph : edges) {
+bool ART::cmp(Edge* a, Edge* b){
+    return sortBase[*a] > sortBase[*b];
+}
+
+void ART::edgeSort(vector<vector<Edge *>> &graphs) {
+
+    for (auto &graph : graphs) {
         for (auto &edge : graph) {
             if (sortBase.find(*edge) == sortBase.end()) {
                 sortBase[*edge] = 1;
@@ -226,16 +242,35 @@ void ART::edgeSort(vector<vector<Edge *>> &edges) {
             }
         }
     }
-
-    for (auto &graph : edges) {
-        sort(graph.begin(), graph.end(), [&sortBase](const Edge *lhs, const Edge *rhs) -> bool {
-            return sortBase[*lhs] > sortBase[*rhs];
-        });
+    for (auto &graph : graphs) {
+        sort(graph.begin(),graph.end(), cmp);
     }
 }
 
+Node *ART::insertNewGraph(PEGraph *pGraph) {
+    vector<Edge*> edgeVector=convertToVector(pGraph);
+    Node* leaf = insert(edgeVector);
+    return leaf;
+}
 
+void ART::loadGraphStore(const string &file) {
 
+}
 
+void ART::clearLinkList(Node *head) {
+    if(head == root){
+        delete(head);
+        return;
+    }
+//    head->parent->children = nullptr;           //todo 1.考虑root 2.置为null和直接delete的区别
+    delete head->parent->children;
+    Node *temp;
+    while(head->next!=nullptr)
+    {
+        temp=head->next;
+        delete head;
+        head=temp;
+    }
+    delete head;
+}
 
-//ART::ART(){}

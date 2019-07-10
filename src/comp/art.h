@@ -14,27 +14,27 @@ using namespace std;
 
 struct Edge {
     int src;
-    int des;
+    int dst;
     char label;
 
     Edge() {};
 
-    Edge(int src, char label, int des) : src(src), label(label), des(des) {};
+    Edge(int src, char label, int des) : src(src), label(label), dst(des) {};
 
     Edge(const Edge &edge) {
         this->src = edge.src;
-        this->des = edge.des;
+        this->dst = edge.dst;
         this->label = edge.label;
     }
 
     bool equal(Edge *other) {
         if (!other) return false;
-        return this->src == other->src && this->des == other->des && this->label == other->label;
+        return this->src == other->src && this->dst == other->dst && this->label == other->label;
     }
 
     bool operator==(const Edge &rhs) const {
         return src == rhs.src &&
-               des == rhs.des &&
+               dst == rhs.dst &&
                label == rhs.label;
     }
 
@@ -43,9 +43,9 @@ struct Edge {
             return true;
         if (rhs.src < src)
             return false;
-        if (des < rhs.des)
+        if (dst < rhs.dst)
             return true;
-        if (rhs.des < des)
+        if (rhs.dst < dst)
             return false;
         return label < rhs.label;
     }
@@ -57,7 +57,7 @@ struct Edge {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Edge &edge) {
-        os << "src: " << edge.src << " des: " << edge.des << " label: " << edge.label;
+        os << "src: " << edge.src << " dst: " << edge.dst << " label: " << edge.label;
         return os;
     }
 };
@@ -72,7 +72,7 @@ namespace std {
             // second and third and combine them using XOR
             // and bit shifting:
             return ((hash<int>()(e.src)
-                     ^ (hash<int>()(e.des) << 1)) >> 1)
+                     ^ (hash<int>()(e.dst) << 1)) >> 1)
                    ^ (hash<char>()(e.label) << 1);
         }
     };
@@ -100,7 +100,7 @@ struct Node {
     }
 
     void toString() {
-        cout << this->data->src << " " << this->data->label << " " << this->data->des << endl;
+        cout << this->data->src << " " << this->data->label << " " << this->data->dst << endl;
     }
 };
 
@@ -121,38 +121,50 @@ public:
 
     Node *insert(vector<Edge *> &v);
 
-    void insert(vector<Edge *> v, Node *root, int begin);
-
     vector<Edge *> retrieveFromLeaf(Node *node) const;
 
     static void del(Node *leaf);
 
-    void DFS(Node *node);
+    void clear_dfs(Node *node, Node *head);
 
-    void edgeSort(vector<vector<Edge *>> &edges);
+     void edgeSort(vector<vector<Edge *>> &graphs);
 
     Node *findChild(Node *parent, Edge *child);
 
-    PEGraph * convertToPEGraph(vector<Edge *> &v) const;
+    PEGraph * convertToPEGraph(vector<Edge *> &graph) const;
 
-    vector<Edge *> convertToVector(PEGraph *peGraph);
+    static vector<Edge *> convertToVector(PEGraph *peGraph);
 
     void loadGraphStore(const string &file) override;
 
     string toString() override;
 
+    void addOneGraph(PEGraph_Pointer pointer, PEGraph *graph) override;
+
+    void update_graphs(GraphStore *another) override;
+
+    void clearEntryOnly() override;
+
+    void clear() override;
+
 protected:
     void print(std::ostream &str) override;
 
-    void toString_sub(std::ostringstream &strm) override;
+    void toString_sub(std::ostringstream &str) override;
 
 //    void addOneSingleton(vertexid_t t);
 
 private:
     Node *root = new Node();
-    std::unordered_map<PEGraph_Pointer, Node *> m;
+    std::unordered_map<PEGraph_Pointer, Node *> mapToLeaf;
+    static unordered_map<Edge, int> sortBase;
 //    std::set<vertexid_t> singletonSet;
 
+    Node *insertNewGraph(PEGraph *pGraph);
+
+    void clearLinkList(Node *head);
+
+    static bool cmp(Edge *a, Edge *b);
 };
 
 

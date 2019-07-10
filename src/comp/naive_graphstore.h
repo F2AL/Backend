@@ -43,7 +43,7 @@ public:
     	PEGraph* out;
 
     	if(map.find(graph_pointer) != map.end()){
-//    		Logger::print_thread_info_locked("retrieving +++++++++++++++++++++++ " +  to_string((long) map[graph_pointer]) + " +++++++++++++++++++++++\n", LEVEL_LOG_GRAPHSTORE) ;
+//    		Logger::print_thread_info_locked("retrieving +++++++++++++++++++++++ " +  to_string((long) mapToLeaf[graph_pointer]) + " +++++++++++++++++++++++\n", LEVEL_LOG_GRAPHSTORE) ;
     		out = new PEGraph(map[graph_pointer]);
     	}
     	else{
@@ -58,7 +58,7 @@ public:
 
     //deep copy; locked version for asynchronous mode
     void update_locked(PEGraph_Pointer graph_pointer, PEGraph* pegraph) {
-    	std::lock_guard<std::mutex> lockGuard(mutex);           //##上锁，这里为啥这么用呢？
+    	std::lock_guard<std::mutex> lockGuard(mutex);
     	update(graph_pointer, pegraph);
     }
 
@@ -67,9 +67,9 @@ public:
 //    	//for debugging
 //    	Logger::print_thread_info_locked("update starting...\n", LEVEL_LOG_FUNCTION);
 
-//    	assert(map.find(graph_pointer) != map.end());
+//    	assert(mapToLeaf.find(graph_pointer) != mapToLeaf.end());
     	if(map.find(graph_pointer) != map.end()){
-//    		Logger::print_thread_info_locked("deleting +++++++++++++++++++++++ " +  to_string((long) map[graph_pointer]) + " +++++++++++++++++++++++\n", LEVEL_LOG_GRAPHSTORE) ;
+//    		Logger::print_thread_info_locked("deleting +++++++++++++++++++++++ " +  to_string((long) mapToLeaf[graph_pointer]) + " +++++++++++++++++++++++\n", LEVEL_LOG_GRAPHSTORE) ;
 			delete map[graph_pointer];
     	}
 		map[graph_pointer] = new PEGraph(pegraph);
@@ -90,7 +90,7 @@ public:
     	}
     }
 
-    void clearEntryOnly(){
+    void clearEntryOnly(){              //## 这是做什么用的
     	this->map.clear();
     }
 

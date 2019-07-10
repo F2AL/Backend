@@ -7,6 +7,7 @@
 
 
 #include "cfg_compute.h"
+#include "art.h"
 
 bool CFGCompute::load(Partition* part, CFG* cfg, GraphStore* graphstore){
 	return true;
@@ -29,7 +30,8 @@ void CFGCompute::do_worklist_synchronous(CFG* cfg, GraphStore* graphstore, Gramm
     }
 
     //initiate a temp graphstore to maintain all the updated graphs
-    GraphStore* tmp_graphstore = new NaiveGraphStore();
+//    GraphStore* tmp_graphstore = new NaiveGraphStore();
+    GraphStore* tmp_graphstore = new ART();
 
     Concurrent_Worklist<CFGNode*>* worklist_2 = new Concurrent_Workset<CFGNode*>();
     while(!worklist_1->isEmpty()){

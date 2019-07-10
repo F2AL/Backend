@@ -17,7 +17,7 @@ using namespace std;
 class GraphStore{
 
 	friend std::ostream & operator<<(std::ostream & strm, GraphStore& graphstore) {   //## << print toString的关系
-		strm << "Graphstore<<<<\n============================================" << endl;     // 这是在干啥
+		strm << "Graphstore<<<<\n============================================" << endl;     // ## 图输出的开始部分
 		graphstore.print(strm);
 		strm << "============================================" << endl;
 		return strm;

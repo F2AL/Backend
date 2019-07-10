@@ -59,7 +59,7 @@ PEGraph *FrequentItemsetStore::convertToPeGraph(set<int> edgeSet) {
 
     for (auto edgeId : edgeSet) {
         vertexid_t src = intToEdge[edgeId].src;
-        vertexid_t dst = intToEdge[edgeId].des;
+        vertexid_t dst = intToEdge[edgeId].dst;
         label_t label = intToEdge[edgeId].label;
         if (graph.find(src) == graph.end()) {
             graph[src] = EdgeArray();
