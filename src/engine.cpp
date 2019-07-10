@@ -10,18 +10,17 @@
 #include "comp/cfg_compute_asyn.h"
 
 
-static const char *const FINAL_FILE = "/home/w/CLionProjects/backend-nju/lib/graphFile/final";      // todo 修改这里的文件路径
+static const char *const FINAL_FILE = "/home/w/CLionProjects/backend-nju/lib/graphFile/final";
 static const char *const STMT_INFO_FILE = "/home/w/CLionProjects/backend-nju/lib/graphFile/id_stmt_info.txt";
 static const char *const SINGLETON_FILE = "/home/w/CLionProjects/backend-nju/lib/graphFile/var_singleton_info.txt";
 static const char *const POINTTO_FILE = "/home/w/CLionProjects/backend-nju/lib/graphFile/index_var_info.txt";           //todo 是不是有什么问题呢
 using namespace std;
 
 
-
 int main() {
-    CFG *cfg = new CFG_map();
-//    GraphStore *graphstore = new NaiveGraphStore();
-    GraphStore *graphstore = new ART();
+    CFG *cfg = new CFG_map();                           //## 这几个函数需要初始化吗
+    GraphStore *graphstore = new NaiveGraphStore();
+//    GraphStore *graphstore = new ART();
     Singletons * singletons = new Singletons();
     Grammar *grammar = new Grammar();
 
