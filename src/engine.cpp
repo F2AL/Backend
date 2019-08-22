@@ -28,7 +28,9 @@ const string file_entries = dir + "entry.txt";
 const string file_cfg = dir + "final";
 const string file_stmts = dir + "id_stmt_info.txt";
 const string file_singletons = dir + "var_singleton_info.txt";
-const string file_grammar = "/home/dell/Desktop/Ouroboros-dataset-master/rules_pointsto.txt";
+const
+
+string file_grammar = "/home/dell/Desktop/Ouroboros-dataset-master/rules_pointsto.txt";
 
 /* function declaration */
 void run_inmemory(int);
@@ -53,66 +55,133 @@ float myTimer::duration_peg_compute_add=0;
 int myTimer::count_peg_compute_delete=0;
 float myTimer::duration_peg_compute_delete=0;
 
+int myTimer::count_startCompute_delete=0;
+float myTimer::duration_startCompute_delete=0;
+
+int myTimer::count_startCompute_add=0;
+float myTimer::duration_startCompute_add=0;
+
+int myTimer::count_postProcessOneIteration_add=0;
+float myTimer::duration_postProcessOneIteration_add=0;
+
+int myTimer::count_postProcessOneIteration_delete=0;
+float myTimer::duration_postProcessOneIteration_delete=0;
+
+int myTimer::count_computeOneIteration_add=0;
+float myTimer::duration_computeOneIteration_add=0;
+
+int myTimer::count_computeOneIteration_delete=0;
+float myTimer::duration_computeOneIteration_delete=0;
+
+
+
 int main(int argc, char* argv[]) {
 
     if(argc != 2 && argc != 3){
-		cout << "Usage: ./backend mode(0: in-memory; 1: out-of-core) num_partitions(if mode == 1)" << endl;
-		return 0;
-	}
+        cout << "Usage: ./backend mode(0: in-memory; 1: out-of-core) num_partitions(if mode == 1)" << endl;
+        return 0;
+    }
 
-	if(argc == 2){
-		if(atoi(argv[1]) != 0){
-			cout << "Usage: ./backend mode(0: in-memory; 1: out-of-core) num_partitions(if mode == 1)" << endl;
-			return 0;
-		}
-	}
+    if(argc == 2){
+        if(atoi(argv[1]) != 0){
+            cout << "Usage: ./backend mode(0: in-memory; 1: out-of-core) num_partitions(if mode == 1)" << endl;
+            return 0;
+        }
+    }
 
-	ResourceManager rm;
-	// get running time (wall time)
-	auto start_fsm = std::chrono::high_resolution_clock::now();
+    ResourceManager rm;
+    // get running time (wall time)
+    auto start_fsm = std::chrono::high_resolution_clock::now();
 
-	if(atoi(argv[1])){
-		run_ooc(atoi(argv[2]), 1);
-	}
-	else{
-		run_inmemory(1);
-	}
+    if(atoi(argv[1])){
+        run_ooc(atoi(argv[2]), 1);
+    }
+    else{
+        run_inmemory(1);
+    }
 
     cout<<endl;
-	auto end_fsm = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double> diff_fsm = end_fsm - start_fsm;
-	std::cout << "Running time : " << diff_fsm.count() << " s\n";
+    auto end_fsm = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff_fsm = end_fsm - start_fsm;
+    std::cout << "Running time : " << diff_fsm.count() << " s\n";
     cout<<endl;
 
 
     std::cout << "test duration : CFGCompute_syn::combine_synchronous : " << myTimer::duration_combine_synchronous<< " s"<< endl;
     std::cout << "test count : CFGCompute_syn::combine_synchronous : " << myTimer::count_combine_synchronous<< " times"<< endl;
+    std::cout << "DPC : CFGCompute_syn::combine_synchronous : " << myTimer::duration_combine_synchronous / myTimer::count_combine_synchronous<< " s"<< endl;
+    std::cout<<std::endl;
 
     std::cout << "test duration : CFGCompute_syn::transfer : " << myTimer::duration_transfer<< " s"<< endl;
     std::cout << "test count : CFGCompute_syn::transfer : " << myTimer::count_transfer<< " times"<< endl;
+    std::cout << "DPC : CFGCompute_syn::transfer : " << myTimer::duration_transfer / myTimer::count_transfer<< " s"<< endl;
+    std::cout<<std::endl;
 
     std::cout << "test duration : NaiveGraphStore::retrieve : " << myTimer::duration_retrieve<< " s"<< endl;
     std::cout << "test count : NaiveGraphStore::retrieve : " << myTimer::count_retrieve<< " times"<< endl;
+    std::cout << "DPC : NaiveGraphStore::retrieve : " << myTimer::duration_retrieve / myTimer::count_retrieve<< " s"<< endl;
+    std::cout<<std::endl;
 
     std::cout << "test duration : NaiveGraphStore::update : " << myTimer::duration_update << " s"<< endl;
     std::cout << "test count : NaiveGraphStore::update : " << myTimer::count_update << " times"<< endl;
+    std::cout << "DPC : NaiveGraphStore::update : " << myTimer::duration_update / myTimer::count_update<< " s"<< endl;
+    std::cout<<std::endl;
 
     std::cout << "test duration : CFGCompute_syn::peg_compute_add : " << myTimer::duration_peg_compute_add << " s"<< endl;
     std::cout << "test count : CFGCompute_syn::peg_compute_add : " << myTimer::count_peg_compute_add << " times"<< endl;
+    std::cout << "DPC : CFGCompute_syn::peg_compute_add : " << myTimer::duration_peg_compute_add / myTimer::count_peg_compute_add<< " s"<< endl;
+    std::cout<<std::endl;
 
     std::cout << "test duration : CFGCompute_syn::peg_compute_delete : " << myTimer::duration_peg_compute_delete << " s"<< endl;
     std::cout << "test count : CFGCompute_syn::peg_compute_delete : " << myTimer::count_peg_compute_delete << " times"<< endl;
+    std::cout << "DPC : CFGCompute_syn::peg_compute_delete : " << myTimer::duration_peg_compute_delete / myTimer::count_peg_compute_delete<< " s"<< endl;
+    std::cout<<std::endl;
 
+    std::cout << "test duration : PEGCompute::startCompute_add : " << myTimer::duration_startCompute_add << " s"<< endl;
+    std::cout << "test count : PEGCompute::startCompute_add : " << myTimer::count_startCompute_add << " times"<< endl;
+    std::cout << "DPC : PEGCompute::startCompute_add : " << myTimer::duration_startCompute_add / myTimer::count_startCompute_add<< " s"<< endl;
+    std::cout<<std::endl;
+
+    std::cout << "test duration : PEGCompute::startComput_delete : " << myTimer::duration_startCompute_delete << " s"<< endl;
+    std::cout << "test count : PEGCompute::startComput_delete : " << myTimer::count_startCompute_delete << " times"<< endl;
+    std::cout << "DPC : PEGCompute::startCompute_delete : " << myTimer::duration_startCompute_delete / myTimer::count_startCompute_delete<< " s"<< endl;
+    std::cout<<std::endl;
+
+    std::cout << "test duration :  PEGCompute::computeOneIteration(add) : " << myTimer::duration_computeOneIteration_add << " s"<< endl;
+    std::cout << "test count : PEGCompute::computeOneIteration(add) : " << myTimer::count_computeOneIteration_add << " times"<< endl;
+    std::cout << "DPC : PEGCompute::computeOneIteration(add) : " << myTimer::duration_computeOneIteration_add / myTimer::count_computeOneIteration_add<< " s"<< endl;
+    std::cout<<std::endl;
+
+    std::cout << "test duration :  PEGCompute::computeOneIteration(delete) : " << myTimer::duration_computeOneIteration_delete << " s"<< endl;
+    std::cout << "test count : PEGCompute::computeOneIteration(delete) : " << myTimer::count_computeOneIteration_delete << " times"<< endl;
+    std::cout << "DPC : PEGCompute::computeOneIteration(delete) : " << myTimer::duration_computeOneIteration_delete / myTimer::count_computeOneIteration_delete<< " s"<< endl;
+    std::cout<<std::endl;
+
+    std::cout << "DPC : PEGCompute::computeOneIteration : " << (myTimer::duration_computeOneIteration_add + myTimer::duration_computeOneIteration_delete) / (myTimer::count_computeOneIteration_add + myTimer::count_computeOneIteration_delete )<< " s"<< endl;
+    std::cout<<std::endl;
+
+    std::cout << "test duration :  PEGCompute::postProcessOneIteration(add) : " << myTimer::duration_postProcessOneIteration_add << " s"<< endl;
+    std::cout << "test count : PEGCompute::postProcessOneIteration(add) : " << myTimer::count_postProcessOneIteration_add << " times"<< endl;
+    std::cout << "DPC : PEGCompute::postProcessOneIteration(add) : " << myTimer::duration_postProcessOneIteration_add / myTimer::count_postProcessOneIteration_add<< " s"<< endl;
+    std::cout<<std::endl;
+
+    std::cout << "test duration :  PEGCompute::postProcessOneIteration(delete) : " << myTimer::duration_postProcessOneIteration_delete << " s"<< endl;
+    std::cout << "test count : PEGCompute::postProcessOneIteration(delete) : " << myTimer::count_postProcessOneIteration_delete << " times"<< endl;
+    std::cout << "DPC : PEGCompute::postProcessOneIteration(delete) : " << myTimer::duration_postProcessOneIteration_delete / myTimer::count_postProcessOneIteration_delete<< " s"<< endl;
+    std::cout<<std::endl;
+
+    std::cout << "DPC : PEGCompute::postProcessOneIteration : " << (myTimer::duration_postProcessOneIteration_add + myTimer::duration_postProcessOneIteration_delete) / (myTimer::count_postProcessOneIteration_add + myTimer::count_postProcessOneIteration_delete )<< " s"<< endl;
+    std::cout<<std::endl;
 
 
     //print out resource usage
-	std::cout << "\n\n";
-	std::cout << "------------------------------ resource usage ------------------------------" << std::endl;
-	std::cout << rm.result() << std::endl;
-	std::cout << "------------------------------ resource usage ------------------------------" << std::endl;
-	std::cout << "\n\n";
+    std::cout << "\n\n";
+    std::cout << "------------------------------ resource usage ------------------------------" << std::endl;
+    std::cout << rm.result() << std::endl;
+    std::cout << "------------------------------ resource usage ------------------------------" << std::endl;
+    std::cout << "\n\n";
 
-	return 0;
+    return 0;
 }
 
 
@@ -121,8 +190,8 @@ void compute_ooc(Partition partition, Context* context, int sync_mode){
 //	//for debugging
 //	Logger::print_thread_info_locked("compute starting...\n", LEVEL_LOG_FUNCTION);
 
-	CFG *cfg = new CFG_map_outcore();
-	GraphStore *graphstore = new NaiveGraphStore();
+    CFG *cfg = new CFG_map_outcore();
+    GraphStore *graphstore = new NaiveGraphStore();
     Concurrent_Worklist<CFGNode*>* actives = new Concurrent_Workset<CFGNode*>();
 
 //    //get the flag for adding self-loop edges
@@ -131,133 +200,133 @@ void compute_ooc(Partition partition, Context* context, int sync_mode){
 
     CFGCompute_ooc_syn::load(partition, cfg, graphstore, context);
     if(sync_mode){
-		CFGCompute_ooc_syn::do_worklist_ooc_synchronous(cfg, graphstore, context->getGrammar(), context->getSingletons(), actives, false);
+        CFGCompute_ooc_syn::do_worklist_ooc_synchronous(cfg, graphstore, context->getGrammar(), context->getSingletons(), actives, false);
     }
     else{
-    	CFGCompute_ooc_asyn::do_worklist_ooc_asynchronous(cfg, graphstore, context->getGrammar(), context->getSingletons(), actives, false);
+        CFGCompute_ooc_asyn::do_worklist_ooc_asynchronous(cfg, graphstore, context->getGrammar(), context->getSingletons(), actives, false);
     }
-	CFGCompute_ooc_syn::pass(partition, cfg, graphstore, actives, context);
+    CFGCompute_ooc_syn::pass(partition, cfg, graphstore, actives, context);
 
-	delete cfg;
-	delete graphstore;
-	delete actives;
+    delete cfg;
+    delete graphstore;
+    delete actives;
 
 //	//for debugging
 //	Logger::print_thread_info_locked("compute finished.\n", LEVEL_LOG_FUNCTION);
 }
 
 void loadMirrors(const string& file_mirrors_in, const string& file_mirrors_out, std::unordered_set<PEGraph_Pointer>& mirrors){
-	//handle mirrors file
-	std::ifstream fin;
-	std::string line;
-	fin.open(file_mirrors_in);
-	if (!fin) {
-		cout << "can't load file_mirrors_in: " << file_mirrors_in << endl;
-	}
-	else {
-		while (getline(fin, line)) {
-			if(line == ""){
-				continue;
-			}
+    //handle mirrors file
+    std::ifstream fin;
+    std::string line;
+    fin.open(file_mirrors_in);
+    if (!fin) {
+        cout << "can't load file_mirrors_in: " << file_mirrors_in << endl;
+    }
+    else {
+        while (getline(fin, line)) {
+            if(line == ""){
+                continue;
+            }
 
-			PEGraph_Pointer id = atoi(line.c_str());
-			mirrors.insert(id);
-		}
-		fin.close();
-	}
+            PEGraph_Pointer id = atoi(line.c_str());
+            mirrors.insert(id);
+        }
+        fin.close();
+    }
 
-	fin.open(file_mirrors_out);
-	if (!fin) {
-		cout << "can't load file_mirrors_out: " << file_mirrors_out << endl;
-	}
-	else{
-		while (getline(fin, line)) {
-			if(line == ""){
-				continue;
-			}
+    fin.open(file_mirrors_out);
+    if (!fin) {
+        cout << "can't load file_mirrors_out: " << file_mirrors_out << endl;
+    }
+    else{
+        while (getline(fin, line)) {
+            if(line == ""){
+                continue;
+            }
 
-			PEGraph_Pointer id = atoi(line.c_str());
-			mirrors.insert(id);
-		}
-		fin.close();
-	}
+            PEGraph_Pointer id = atoi(line.c_str());
+            mirrors.insert(id);
+        }
+        fin.close();
+    }
 }
 
 void printGraphstoreInfo(Context* context){
-	cout << "GraphStore Info >>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
-	long num_edges = 0;
-	int num_graphs = 0;
-	for(unsigned int partition = 0; partition < context->getNumberPartitions(); ++ partition){
-		NaiveGraphStore *graphstore = new NaiveGraphStore();
-		std::unordered_set<PEGraph_Pointer> mirrors;
+    cout << "GraphStore Info >>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
+    long num_edges = 0;
+    int num_graphs = 0;
+    for(unsigned int partition = 0; partition < context->getNumberPartitions(); ++ partition){
+        NaiveGraphStore *graphstore = new NaiveGraphStore();
+        std::unordered_set<PEGraph_Pointer> mirrors;
 
-		const string filename_graphs = Context::file_graphstore + to_string(partition);
-		graphstore->deserialize(filename_graphs);
+        const string filename_graphs = Context::file_graphstore + to_string(partition);
+        graphstore->deserialize(filename_graphs);
 
-		const string filename_mirrors_in = Context::folder_mirrors_in + to_string(partition);
-		const string filename_mirrors_out = Context::folder_mirrors_out + to_string(partition);
-		loadMirrors(filename_mirrors_in, filename_mirrors_out, mirrors);
+        const string filename_mirrors_in = Context::folder_mirrors_in + to_string(partition);
+        const string filename_mirrors_out = Context::folder_mirrors_out + to_string(partition);
+        loadMirrors(filename_mirrors_in, filename_mirrors_out, mirrors);
 
-		auto map = graphstore->getMap();
+        auto map = graphstore->getMap();
 
-    	int size_graphs = 0;
-    	long size_edges = 0;
+        int size_graphs = 0;
+        long size_edges = 0;
 
-    	cout << "partition " << to_string(partition) << endl;
-    	for(auto it = map.begin(); it != map.end(); ++it){
-    		if(mirrors.find(it->first) == mirrors.end()){
-				size_edges += it->second->getNumEdges();
-				size_graphs++;
-    		}
-    	}
+        cout << "partition " << to_string(partition) << endl;
+        for(auto it = map.begin(); it != map.end(); ++it){
+            if(mirrors.find(it->first) == mirrors.end()){
+                size_edges += it->second->getNumEdges();
+                size_graphs++;
+            }
+        }
 
-    	cout << "Number of graphs: " << size_graphs << endl;
-    	cout << "Number of edges: " << size_edges << endl;
-    	cout << endl;
+        cout << "Number of graphs: " << size_graphs << endl;
+        cout << "Number of edges: " << size_edges << endl;
+        cout << endl;
 
-    	delete graphstore;
+        delete graphstore;
 
-    	num_edges += size_edges;
-    	num_graphs += size_graphs;
-	}
+        num_edges += size_edges;
+        num_graphs += size_graphs;
+    }
 
-	cout << "\nTotal number of graphs: " << num_graphs << endl;
-	cout << "Total number of edges: " << num_edges << endl;
-	cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
+    cout << "\nTotal number of graphs: " << num_graphs << endl;
+    cout << "Total number of edges: " << num_edges << endl;
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
 }
 
 void run_ooc(int num_partitions, int sync_mode){
-	//preprocessing
-	Context* context = new Context(num_partitions, file_total, file_cfg, file_stmts, file_entries, file_singletons, file_grammar);
-	Preprocess::process(*context);
+    //preprocessing
+    Context* context = new Context(num_partitions, file_total, file_cfg, file_stmts, file_entries, file_singletons, file_grammar);
+    Preprocess::process(*context);
 
-	//for debugging
-	context->printOutPriorityInfo();
+    //for debugging
+    context->printOutPriorityInfo();
 
-	//iterative computation
-	Partition partition;
-	while(context->schedule(partition)){
-		compute_ooc(partition, context, sync_mode);
+    //iterative computation
+    Partition partition;
+    while(context->schedule(partition)){
+        compute_ooc(partition, context, sync_mode);
 
-		//for debugging
-		context->printOutPriorityInfo();
-	}
+        //for debugging
+        context->printOutPriorityInfo();
+    }
 
-	//for debugging
+    //for debugging
 //	NaiveGraphStore *graphstore = new NaiveGraphStore();
 //	readAllGraphs(graphstore, context);
 //	graphstore->printOutInfo();
 //	delete graphstore;
-	printGraphstoreInfo(context);
+    printGraphstoreInfo(context);
 
-	delete context;
+    delete context;
 }
 
 
 void compute_inmemory(int sync_mode){
-	CFG *cfg = new CFG_map();
-	GraphStore *graphstore = new NaiveGraphStore();
-	Singletons * singletons = new Singletons();
+    CFG *cfg = new CFG_map();
+    GraphStore *graphstore = new NaiveGraphStore();
+    Singletons * singletons = new Singletons();
     Grammar *grammar = new Grammar();
 
     cout<<endl;
@@ -265,7 +334,7 @@ void compute_inmemory(int sync_mode){
     auto start_fsm = std::chrono::high_resolution_clock::now();
     cout<<endl;
 
-	CFGCompute_syn::load(file_total, file_cfg, file_stmts, file_entries, cfg, file_singletons, singletons, graphstore, file_grammar, grammar);
+    CFGCompute_syn::load(file_total, file_cfg, file_stmts, file_entries, cfg, file_singletons, singletons, graphstore, file_grammar, grammar);
 
     cout<<endl;
     auto end_fsm = std::chrono::high_resolution_clock::now();
@@ -274,21 +343,21 @@ void compute_inmemory(int sync_mode){
     cout<<endl;
 
 
-	if(sync_mode){
-		CFGCompute_syn::do_worklist_synchronous(cfg, graphstore, grammar, singletons, false);
-	}
-	else{
-		CFGCompute_asyn::do_worklist_asynchronous(cfg, graphstore, grammar, singletons, false);
-	}
+    if(sync_mode){
+        CFGCompute_syn::do_worklist_synchronous(cfg, graphstore, grammar, singletons, false);
+    }
+    else{
+        CFGCompute_asyn::do_worklist_asynchronous(cfg, graphstore, grammar, singletons, false);
+    }
 
-	delete cfg;
-	delete graphstore;
-	delete grammar;
-	delete singletons;
+    delete cfg;
+    delete graphstore;
+    delete grammar;
+    delete singletons;
 }
 
 void run_inmemory(int sync_mode){
-	compute_inmemory(sync_mode);
+    compute_inmemory(sync_mode);
 }
 
 

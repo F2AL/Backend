@@ -10,12 +10,6 @@ class myTimer {
 private:
 
 
-//    peg_compute_add
-//    startCompute_add
-//
-//    peg_compute_delete
-//    startCompute_delete
-
 public:
 
     static int count_combine_synchronous;
@@ -36,6 +30,24 @@ public:
 
     static int count_peg_compute_delete;
     static float duration_peg_compute_delete;
+
+    static int count_startCompute_delete;
+    static float duration_startCompute_delete;
+
+    static int count_startCompute_add;
+    static float duration_startCompute_add;
+
+    static int count_postProcessOneIteration_add;
+    static float duration_postProcessOneIteration_add;
+
+    static int count_postProcessOneIteration_delete;
+    static float duration_postProcessOneIteration_delete;
+
+    static int count_computeOneIteration_add;
+    static float duration_computeOneIteration_add;
+
+    static int count_computeOneIteration_delete;
+    static float duration_computeOneIteration_delete;
 
 
     static void addCountCombineSynchronous();
@@ -62,6 +74,16 @@ public:
     static void addDurationUpdate(double duration);
 
     static void addCountUpdate();
+
+    static void add_duration_startCompute_add(double duration);
+
+    static void add_count_startCompute_add();
+
+    static void add_duration_startCompute_delete(double duration);
+
+    static void add_count_startCompute_delete();
+
+
 };
 
 

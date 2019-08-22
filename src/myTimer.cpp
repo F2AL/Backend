@@ -52,3 +52,19 @@ void myTimer::addCountPegComputeDeleted() {
 void myTimer::addDurationPegComputeDeleted(double duration) {
     duration_peg_compute_delete += duration;
 }
+
+void myTimer::add_duration_startCompute_add(double duration) {
+    duration_startCompute_add += duration;
+}
+
+void myTimer::add_count_startCompute_add() {
+    count_startCompute_add++;
+}
+
+void myTimer::add_duration_startCompute_delete(double duration) {
+    duration_startCompute_delete+=duration;
+}
+
+void myTimer::add_count_startCompute_delete() {
+    count_startCompute_delete++;
+}

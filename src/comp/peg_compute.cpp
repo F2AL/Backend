@@ -1,15 +1,35 @@
 #include "peg_compute.h"
+#include "../myTimer.h"
 
 
 //PEGCompute::PEGCompute() = default;
 
-long PEGCompute::startCompute_delete(ComputationSet *compset, Grammar *grammar, std::unordered_map<vertexid_t, EdgeArray> *m) {
+long PEGCompute::startCompute_delete(ComputationSet *compset, Grammar *grammar,
+                                     std::unordered_map<vertexid_t, EdgeArray> *m) {
     long totalAddedEdges = 0;
 
     while (true) {
+
+        auto start_fsm = std::chrono::high_resolution_clock::now();
+
         computeOneIteration(compset, grammar);
 
+        auto end_fsm = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff_fsm = end_fsm - start_fsm;
+
+        myTimer::count_computeOneIteration_delete++;
+        myTimer::duration_computeOneIteration_delete += diff_fsm.count();
+
+
+        start_fsm = std::chrono::high_resolution_clock::now();
+
         postProcessOneIteration(compset, true, m);
+
+        end_fsm = std::chrono::high_resolution_clock::now();
+        diff_fsm = end_fsm - start_fsm;
+
+        myTimer::count_postProcessOneIteration_delete++;
+        myTimer::duration_postProcessOneIteration_delete += diff_fsm.count();
 
         long realAddedEdgesPerIter = compset->getDeltasTotalNumEdges();
         totalAddedEdges += realAddedEdgesPerIter;
@@ -20,8 +40,8 @@ long PEGCompute::startCompute_delete(ComputationSet *compset, Grammar *grammar, 
 }
 
 long PEGCompute::startCompute_add(ComputationSet *compset, Grammar *grammar) {
-	//for debugging
-	Logger::print_thread_info_locked("start-compute_add starting...\n", LEVEL_LOG_FUNCTION);
+    //for debugging
+    Logger::print_thread_info_locked("start-compute_add starting...\n", LEVEL_LOG_FUNCTION);
 
     long totalAddedEdges = 0;
 
@@ -31,14 +51,30 @@ long PEGCompute::startCompute_add(ComputationSet *compset, Grammar *grammar) {
 //    cout << *compset << endl;
 
     while (true) {
+        auto start_fsm = std::chrono::high_resolution_clock::now();
+
         computeOneIteration(compset, grammar);
+
+        auto end_fsm = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff_fsm = end_fsm - start_fsm;
+
+        myTimer::count_computeOneIteration_add++;
+        myTimer::duration_computeOneIteration_add += diff_fsm.count();
+
 
 //        //for debugging
 //        cout << *compset << endl;
 //        cout << "-----------------------------------------------------------------------------\n";
 
+        start_fsm = std::chrono::high_resolution_clock::now();
+
         postProcessOneIteration(compset, false);
 
+        end_fsm = std::chrono::high_resolution_clock::now();
+        diff_fsm = end_fsm - start_fsm;
+
+        myTimer::count_postProcessOneIteration_add++;
+        myTimer::duration_postProcessOneIteration_add += diff_fsm.count();
 //        //for debugging
 //        cout << *compset << endl;
 //        cout << "-----------------------------------------------------------------------------\n";
@@ -49,8 +85,8 @@ long PEGCompute::startCompute_add(ComputationSet *compset, Grammar *grammar) {
             break;
     }
 
-	//for debugging
-	Logger::print_thread_info_locked("start-compute_add finished.\n", LEVEL_LOG_FUNCTION);
+    //for debugging
+    Logger::print_thread_info_locked("start-compute_add finished.\n", LEVEL_LOG_FUNCTION);
 
     return totalAddedEdges;
 }
@@ -79,8 +115,8 @@ void PEGCompute::computeOneIteration(ComputationSet *compset, Grammar *grammar) 
 //}
 
 long PEGCompute::computeOneVertex(vertexid_t index, ComputationSet *compset, Grammar *grammar) {
-	//for debugging
-	Logger::print_thread_info_locked("compute-one-vertex starting...\n", LEVEL_LOG_FUNCTION);
+    //for debugging
+    Logger::print_thread_info_locked("compute-one-vertex starting...\n", LEVEL_LOG_FUNCTION);
 
     bool oldEmpty = compset->oldEmpty(index) || compset->getOlds()[index].isEmpty();
     bool deltaEmpty = compset->deltaEmpty(index) || compset->getDeltas()[index].isEmpty();
@@ -89,11 +125,11 @@ long PEGCompute::computeOneVertex(vertexid_t index, ComputationSet *compset, Gra
 //    cout << "old is empty? " << oldEmpty << ", delta is empty? " << deltaEmpty << endl;
 
     // if this vertex has no edges, no need to merge.
-    if (oldEmpty && deltaEmpty){
-    	//for debugging
-    	Logger::print_thread_info_locked("compute-one-vertex finished.\n", LEVEL_LOG_FUNCTION);
+    if (oldEmpty && deltaEmpty) {
+        //for debugging
+        Logger::print_thread_info_locked("compute-one-vertex finished.\n", LEVEL_LOG_FUNCTION);
 
-    	return 0;
+        return 0;
     }
 
     // use array
@@ -108,7 +144,7 @@ long PEGCompute::computeOneVertex(vertexid_t index, ComputationSet *compset, Gra
     long newEdgesNum = containers->getNumEdges();
     //for debugging
     Logger::print_thread_info_locked("number of new edges: " + std::to_string(newEdgesNum) + "\n", LEVEL_LOG_FUNCTION);
-    if (newEdgesNum){
+    if (newEdgesNum) {
         compset->setNews(index, newEdgesNum, containers->getEdgesFirstAddr(), containers->getLabelsFirstAddr());
     }
 //    else{
@@ -119,8 +155,8 @@ long PEGCompute::computeOneVertex(vertexid_t index, ComputationSet *compset, Gra
     containers->clear();
     delete containers;
 
-	//for debugging
-	Logger::print_thread_info_locked("compute-one-vertex finished.\n", LEVEL_LOG_FUNCTION);
+    //for debugging
+    Logger::print_thread_info_locked("compute-one-vertex finished.\n", LEVEL_LOG_FUNCTION);
 
     return newEdgesNum;
 }
@@ -128,7 +164,7 @@ long PEGCompute::computeOneVertex(vertexid_t index, ComputationSet *compset, Gra
 void PEGCompute::getEdgesToMerge(vertexid_t index, ComputationSet *compset, bool oldEmpty, bool deltaEmpty,
                                  ContainersToMerge &containers, Grammar *grammar) {
     // add s-rule edges
-    if (!deltaEmpty){
+    if (!deltaEmpty) {
         genS_RuleEdges_delta(index, compset, containers, grammar);
         genD_RuleEdges_delta(index, compset, containers, grammar);
     }
@@ -136,7 +172,8 @@ void PEGCompute::getEdgesToMerge(vertexid_t index, ComputationSet *compset, bool
         genD_RuleEdges_old(index, compset, containers, grammar);
 }
 
-void PEGCompute::genS_RuleEdges_delta(vertexid_t index, ComputationSet *compset, ContainersToMerge &containers, Grammar *grammar) {
+void PEGCompute::genS_RuleEdges_delta(vertexid_t index, ComputationSet *compset, ContainersToMerge &containers,
+                                      Grammar *grammar) {
     vertexid_t numEdges = compset->getDeltasNumEdges(index); //## can we make sure that the deltas is uniqueness
     vertexid_t *edges = compset->getDeltasEdges(index);
     char *labels = compset->getDeltasLabels(index);
@@ -155,22 +192,23 @@ void PEGCompute::genS_RuleEdges_delta(vertexid_t index, ComputationSet *compset,
     }
 }
 
-void PEGCompute::genD_RuleEdges_old(vertexid_t index, ComputationSet *compset, ContainersToMerge &containers, Grammar *grammar) {
+void PEGCompute::genD_RuleEdges_old(vertexid_t index, ComputationSet *compset, ContainersToMerge &containers,
+                                    Grammar *grammar) {
     vertexid_t numEdges_src_old = compset->getOldsNumEdges(index);
-    vertexid_t* edges_src_old = compset->getOldsEdges(index);
-    char* labels_src_old = compset->getOldsLabels(index);
+    vertexid_t *edges_src_old = compset->getOldsEdges(index);
+    char *labels_src_old = compset->getOldsLabels(index);
 
     for (vertexid_t i_src = 0; i_src < numEdges_src_old; ++i_src) {
-    	vertexid_t dstId = edges_src_old[i_src];
-    	char dstVal = labels_src_old[i_src];
+        vertexid_t dstId = edges_src_old[i_src];
+        char dstVal = labels_src_old[i_src];
 
-    	if(compset->getDeltas().find(dstId) == compset->getDeltas().end()){
-    		continue;
-    	}
+        if (compset->getDeltas().find(dstId) == compset->getDeltas().end()) {
+            continue;
+        }
 
         vertexid_t numEdges_delta = compset->getDeltasNumEdges(dstId);
-        vertexid_t* edges_delta = compset->getDeltasEdges(dstId);
-        char* labels_delta = compset->getDeltasLabels(dstId);
+        vertexid_t *edges_delta = compset->getDeltasEdges(dstId);
+        char *labels_delta = compset->getDeltasLabels(dstId);
 
         char newVal;
         bool added = false;
@@ -187,53 +225,54 @@ void PEGCompute::genD_RuleEdges_old(vertexid_t index, ComputationSet *compset, C
     }
 }
 
-void PEGCompute::genD_RuleEdges_delta(vertexid_t index, ComputationSet *compset, ContainersToMerge &containers, Grammar *grammar) {
+void PEGCompute::genD_RuleEdges_delta(vertexid_t index, ComputationSet *compset, ContainersToMerge &containers,
+                                      Grammar *grammar) {
     vertexid_t numEdges_src_delta = compset->getDeltasNumEdges(index);
-    vertexid_t* edges_src_delta = compset->getDeltasEdges(index);
-    char* labels_src_delta = compset->getDeltasLabels(index);
+    vertexid_t *edges_src_delta = compset->getDeltasEdges(index);
+    char *labels_src_delta = compset->getDeltasLabels(index);
 
     for (vertexid_t i_src = 0; i_src < numEdges_src_delta; ++i_src) {
-    	vertexid_t dstId = edges_src_delta[i_src];
-    	char dstVal = labels_src_delta[i_src];
+        vertexid_t dstId = edges_src_delta[i_src];
+        char dstVal = labels_src_delta[i_src];
 
-		//delta * delta
-    	if(compset->getDeltas().find(dstId) != compset->getDeltas().end()){
-			vertexid_t numEdges_delta = compset->getDeltasNumEdges(dstId);
-			vertexid_t* edges_delta = compset->getDeltasEdges(dstId);
-			char* labels_delta = compset->getDeltasLabels(dstId);
+        //delta * delta
+        if (compset->getDeltas().find(dstId) != compset->getDeltas().end()) {
+            vertexid_t numEdges_delta = compset->getDeltasNumEdges(dstId);
+            vertexid_t *edges_delta = compset->getDeltasEdges(dstId);
+            char *labels_delta = compset->getDeltasLabels(dstId);
 
-			char newVal;
-			bool added = false;
-			for (vertexid_t i = 0; i < numEdges_delta; ++i) {
-				newVal = grammar->checkRules(dstVal, labels_delta[i]);
-				if (newVal != (char) 127) {
-					if (!added) {
-						containers.addOneContainer();
-						added = true;
-					}
-					containers.addOneEdge(edges_delta[i], newVal);
-				}
-			}
-    	}
+            char newVal;
+            bool added = false;
+            for (vertexid_t i = 0; i < numEdges_delta; ++i) {
+                newVal = grammar->checkRules(dstVal, labels_delta[i]);
+                if (newVal != (char) 127) {
+                    if (!added) {
+                        containers.addOneContainer();
+                        added = true;
+                    }
+                    containers.addOneEdge(edges_delta[i], newVal);
+                }
+            }
+        }
 
-		//delta * old
-    	if(compset->getOlds().find(dstId) != compset->getOlds().end()){
-    		vertexid_t numEdges_old = compset->getOldsNumEdges(dstId);
-    		vertexid_t* edges_old = compset->getOldsEdges(dstId);
-			char* labels_old = compset->getOldsLabels(dstId);
-			char newVal;
-			bool added = false;
-			for (vertexid_t i = 0; i < numEdges_old; ++i) {
-				newVal = grammar->checkRules(dstVal, labels_old[i]);
-				if (newVal != (char) 127) {
-					if (!added) {
-						containers.addOneContainer();
-						added = true;
-					}
-					containers.addOneEdge(edges_old[i], newVal);
-				}
-			}
-    	}
+        //delta * old
+        if (compset->getOlds().find(dstId) != compset->getOlds().end()) {
+            vertexid_t numEdges_old = compset->getOldsNumEdges(dstId);
+            vertexid_t *edges_old = compset->getOldsEdges(dstId);
+            char *labels_old = compset->getOldsLabels(dstId);
+            char newVal;
+            bool added = false;
+            for (vertexid_t i = 0; i < numEdges_old; ++i) {
+                newVal = grammar->checkRules(dstVal, labels_old[i]);
+                if (newVal != (char) 127) {
+                    if (!added) {
+                        containers.addOneContainer();
+                        added = true;
+                    }
+                    containers.addOneEdge(edges_old[i], newVal);
+                }
+            }
+        }
 
     }
 }
@@ -280,46 +319,48 @@ void PEGCompute::genD_RuleEdges_delta(vertexid_t index, ComputationSet *compset,
 //    }
 //}
 
-void PEGCompute::postProcessOneIteration(ComputationSet *compset, bool isDelete, std::unordered_map<vertexid_t, EdgeArray> *m) {
-	//for debugging
-	Logger::print_thread_info_locked("postprocess-one-iteration starting...\n", LEVEL_LOG_FUNCTION);
+void PEGCompute::postProcessOneIteration(ComputationSet *compset, bool isDelete,
+                                         std::unordered_map<vertexid_t, EdgeArray> *m) {
+    //for debugging
+    Logger::print_thread_info_locked("postprocess-one-iteration starting...\n", LEVEL_LOG_FUNCTION);
 
-	// oldsV <- {oldsV,deltasV}
-	for (auto it = compset->getOlds().begin(); it != compset->getOlds().end(); it++) {
-		vertexid_t id_old = it->first;
-		if(compset->getDeltas().find(id_old) != compset->getDeltas().end()){
-			int n1 = compset->getOldsNumEdges(id_old);
-			int n2 = compset->getDeltasNumEdges(id_old);
-			vertexid_t *edges = new vertexid_t[n1 + n2];
-			char *labels = new char[n1 + n2];
-			int len = myalgo::unionTwoArray(edges, labels, n1,
-					compset->getOldsEdges(id_old), compset->getOldsLabels(id_old), n2,
-					compset->getDeltasEdges(id_old), compset->getDeltasLabels(id_old));
-			compset->setOlds(id_old, len, edges, labels);
-			delete[] edges;
-			delete[] labels;
+    // oldsV <- {oldsV,deltasV}
+    for (auto it = compset->getOlds().begin(); it != compset->getOlds().end(); it++) {
+        vertexid_t id_old = it->first;
+        if (compset->getDeltas().find(id_old) != compset->getDeltas().end()) {
+            int n1 = compset->getOldsNumEdges(id_old);
+            int n2 = compset->getDeltasNumEdges(id_old);
+            vertexid_t *edges = new vertexid_t[n1 + n2];
+            char *labels = new char[n1 + n2];
+            int len = myalgo::unionTwoArray(edges, labels, n1,
+                                            compset->getOldsEdges(id_old), compset->getOldsLabels(id_old), n2,
+                                            compset->getDeltasEdges(id_old), compset->getDeltasLabels(id_old));
+            compset->setOlds(id_old, len, edges, labels);
+            delete[] edges;
+            delete[] labels;
 
-			compset->getDeltas().erase(id_old);
-		}
-	}
+            compset->getDeltas().erase(id_old);
+        }
+    }
 
 //    //for debugging
 //    cout << *compset << endl;
 //    cout << "-----------------------------------------------------------------------------\n";
 
-	for (auto it = compset->getDeltas().begin(); it != compset->getDeltas().end(); ) {
-		vertexid_t id_delta = it->first;
+    for (auto it = compset->getDeltas().begin(); it != compset->getDeltas().end();) {
+        vertexid_t id_delta = it->first;
 //		cout << id_delta << endl;
-		//the left in deltas doesn't exist in olds
-		assert(compset->getOlds().find(id_delta) == compset->getOlds().end());
-		compset->setOlds(id_delta, compset->getDeltasNumEdges(id_delta), compset->getDeltasEdges(id_delta), compset->getDeltasLabels(id_delta));
+        //the left in deltas doesn't exist in olds
+        assert(compset->getOlds().find(id_delta) == compset->getOlds().end());
+        compset->setOlds(id_delta, compset->getDeltasNumEdges(id_delta), compset->getDeltasEdges(id_delta),
+                         compset->getDeltasLabels(id_delta));
 
-		it = compset->getDeltas().erase(it);
-	}
-	assert(compset->getDeltas().empty());
+        it = compset->getDeltas().erase(it);
+    }
+    assert(compset->getDeltas().empty());
 
     // deltasV <- newsV - oldsV, newsV <= empty set
-    for (auto it = compset->getNews().begin(); it != compset->getNews().end(); ) {
+    for (auto it = compset->getNews().begin(); it != compset->getNews().end();) {
         vertexid_t i_new = it->first;
 
 //        //for debugging
@@ -327,50 +368,50 @@ void PEGCompute::postProcessOneIteration(ComputationSet *compset, bool isDelete,
 //        cout << compset->getNews()[i_new] << std::endl;
 
         if (isDelete) {
-			mergeToDeletedGraph(i_new, m, compset);
+            mergeToDeletedGraph(i_new, m, compset);
         }
 
         int n1 = compset->getNewsNumEdges(i_new);
         int n2 = compset->getOldsNumEdges(i_new);
-        vertexid_t* edges = new vertexid_t[n1];
-        char* labels = new char[n1];
+        vertexid_t *edges = new vertexid_t[n1];
+        char *labels = new char[n1];
         int len = myalgo::minusTwoArray(edges, labels,
                                         n1, compset->getNewsEdges(i_new), compset->getNewsLabels(i_new),
                                         n2, compset->getOldsEdges(i_new), compset->getOldsLabels(i_new));
 
-		if (len){
-			compset->setDeltas(i_new, len, edges, labels);
+        if (len) {
+            compset->setDeltas(i_new, len, edges, labels);
         }
 
-		delete[] edges;
-		delete[] labels;
+        delete[] edges;
+        delete[] labels;
 
-		it = compset->getNews().erase(it);
-	}
+        it = compset->getNews().erase(it);
+    }
 
-	//for debugging
-	Logger::print_thread_info_locked("postprocess-one-iteration finished.\n", LEVEL_LOG_FUNCTION);
+    //for debugging
+    Logger::print_thread_info_locked("postprocess-one-iteration finished.\n", LEVEL_LOG_FUNCTION);
 }
 
-void PEGCompute::mergeToDeletedGraph(vertexid_t i_new, std::unordered_map<vertexid_t, EdgeArray>* m, ComputationSet* compset) {
-	if(m->find(i_new) != m->end()){
-		int n1 = m->at(i_new).getSize();
-		int n2 = compset->getNewsNumEdges(i_new);
-		vertexid_t* edges = new vertexid_t[n1 + n2];
-		char* labels = new char[n1 + n2];
-		int len_union = myalgo::unionTwoArray(edges, labels,
-				n1, m->at(i_new).getEdges(), m->at(i_new).getLabels(),
-				n2, compset->getNewsEdges(i_new), compset->getNewsLabels(i_new));
-		m->at(i_new).set(len_union, edges, labels);
+void PEGCompute::mergeToDeletedGraph(vertexid_t i_new, std::unordered_map<vertexid_t, EdgeArray> *m,
+                                     ComputationSet *compset) {
+    if (m->find(i_new) != m->end()) {
+        int n1 = m->at(i_new).getSize();
+        int n2 = compset->getNewsNumEdges(i_new);
+        vertexid_t *edges = new vertexid_t[n1 + n2];
+        char *labels = new char[n1 + n2];
+        int len_union = myalgo::unionTwoArray(edges, labels,
+                                              n1, m->at(i_new).getEdges(), m->at(i_new).getLabels(),
+                                              n2, compset->getNewsEdges(i_new), compset->getNewsLabels(i_new));
+        m->at(i_new).set(len_union, edges, labels);
 
-		delete[] edges;
-		delete[] labels;
-	}
-	else{
-		(*m)[i_new] = EdgeArray();
+        delete[] edges;
+        delete[] labels;
+    } else {
+        (*m)[i_new] = EdgeArray();
 //		m->insert(std::make_pair<vertexid_t, EdgeArray>(i_new, EdgeArray()));
-		m->at(i_new).set(compset->getNewsNumEdges(i_new), compset->getNewsEdges(i_new), compset->getNewsLabels(i_new));
-	}
+        m->at(i_new).set(compset->getNewsNumEdges(i_new), compset->getNewsEdges(i_new), compset->getNewsLabels(i_new));
+    }
 }
 
 //void PEGCompute::postProcessOneIteration_add(ComputationSet &compset) {
