@@ -22,19 +22,29 @@ using namespace std;
 //const string file_singletons = dir + "var_singleton_info.txt";
 //const string file_grammar = "/home/dell/Desktop/Ouroboros-dataset-master/rules_pointsto.txt";
 
-const string dir = "/home/dell/GraphFlow/GraphSSAInline/httpd/";
-const string file_total = dir + "total.txt";
-const string file_entries = dir + "entry.txt";
-const string file_cfg = dir + "final";
-const string file_stmts = dir + "id_stmt_info.txt";
-const string file_singletons = dir + "var_singleton_info.txt";
-const
+ string dir;
+ string file_total;
+ string file_entries;
+ string file_cfg;
+ string file_stmts;
+ string file_singletons;
+ string file_grammar;
 
-string file_grammar = "/home/dell/Desktop/Ouroboros-dataset-master/rules_pointsto.txt";
+struct file{
+     string dir;
+     string file_total;
+     string file_entries ;
+     string file_cfg ;
+     string file_stmts;
+     string file_singletons;
+     string file_grammar;
+} File[10];
 
 /* function declaration */
 void run_inmemory(int);
 void run_ooc(int, int);
+
+void initFile();
 
 //myTimer* myTimer::m_instance = nullptr;
 int myTimer::count_combine_synchronous=0;
@@ -89,101 +99,161 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    ResourceManager rm;
-    // get running time (wall time)
-    auto start_fsm = std::chrono::high_resolution_clock::now();
+    initFile();
+    file_grammar = "/home/dell/Desktop/Ouroboros-dataset-master/rules_pointsto.txt";
+    for (int i = 0; i<=5; i++) {
+        dir = File[i].dir;
+        file_total = dir + "total.txt";
+        file_entries = dir + "entry.txt";
+        file_cfg = dir + "final";
+        file_stmts = dir + "id_stmt_info.txt";
+        file_singletons = dir + "var_singleton_info.txt";
 
-    if(atoi(argv[1])){
-        run_ooc(atoi(argv[2]), 1);
+        ResourceManager rm;
+        // get running time (wall time)
+        auto start_fsm = std::chrono::high_resolution_clock::now();
+
+        if (atoi(argv[1])) {
+            run_ooc(atoi(argv[2]), 1);
+        } else {
+            run_inmemory(1);
+        }
+
+        cout << endl;
+        auto end_fsm = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff_fsm = end_fsm - start_fsm;
+        std::cout << "Running time : " << diff_fsm.count() << " s\n";
+        cout << endl;
+
+        std::cout<<"----------------------------------"<<dir<<"-----------------------------------------"<<endl;
+
+        std::cout << "test duration : CFGCompute_syn::combine_synchronous : " << myTimer::duration_combine_synchronous
+                  << " s" << endl;
+        std::cout << "test count : CFGCompute_syn::combine_synchronous : " << myTimer::count_combine_synchronous
+                  << " times" << endl;
+        std::cout << "DPC : CFGCompute_syn::combine_synchronous : "
+                  << myTimer::duration_combine_synchronous / myTimer::count_combine_synchronous << " s" << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration : CFGCompute_syn::transfer : " << myTimer::duration_transfer << " s" << endl;
+        std::cout << "test count : CFGCompute_syn::transfer : " << myTimer::count_transfer << " times" << endl;
+        std::cout << "DPC : CFGCompute_syn::transfer : " << myTimer::duration_transfer / myTimer::count_transfer << " s"
+                  << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration : NaiveGraphStore::retrieve : " << myTimer::duration_retrieve << " s" << endl;
+        std::cout << "test count : NaiveGraphStore::retrieve : " << myTimer::count_retrieve << " times" << endl;
+        std::cout << "DPC : NaiveGraphStore::retrieve : " << myTimer::duration_retrieve / myTimer::count_retrieve
+                  << " s" << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration : NaiveGraphStore::update : " << myTimer::duration_update << " s" << endl;
+        std::cout << "test count : NaiveGraphStore::update : " << myTimer::count_update << " times" << endl;
+        std::cout << "DPC : NaiveGraphStore::update : " << myTimer::duration_update / myTimer::count_update << " s"
+                  << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration : CFGCompute_syn::peg_compute_add : " << myTimer::duration_peg_compute_add << " s"
+                  << endl;
+        std::cout << "test count : CFGCompute_syn::peg_compute_add : " << myTimer::count_peg_compute_add << " times"
+                  << endl;
+        std::cout << "DPC : CFGCompute_syn::peg_compute_add : "
+                  << myTimer::duration_peg_compute_add / myTimer::count_peg_compute_add << " s" << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration : CFGCompute_syn::peg_compute_delete : " << myTimer::duration_peg_compute_delete
+                  << " s" << endl;
+        std::cout << "test count : CFGCompute_syn::peg_compute_delete : " << myTimer::count_peg_compute_delete
+                  << " times" << endl;
+        std::cout << "DPC : CFGCompute_syn::peg_compute_delete : "
+                  << myTimer::duration_peg_compute_delete / myTimer::count_peg_compute_delete << " s" << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration : PEGCompute::startCompute_add : " << myTimer::duration_startCompute_add << " s"
+                  << endl;
+        std::cout << "test count : PEGCompute::startCompute_add : " << myTimer::count_startCompute_add << " times"
+                  << endl;
+        std::cout << "DPC : PEGCompute::startCompute_add : "
+                  << myTimer::duration_startCompute_add / myTimer::count_startCompute_add << " s" << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration : PEGCompute::startComput_delete : " << myTimer::duration_startCompute_delete
+                  << " s" << endl;
+        std::cout << "test count : PEGCompute::startComput_delete : " << myTimer::count_startCompute_delete << " times"
+                  << endl;
+        std::cout << "DPC : PEGCompute::startCompute_delete : "
+                  << myTimer::duration_startCompute_delete / myTimer::count_startCompute_delete << " s" << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration :  PEGCompute::computeOneIteration(add) : "
+                  << myTimer::duration_computeOneIteration_add << " s" << endl;
+        std::cout << "test count : PEGCompute::computeOneIteration(add) : " << myTimer::count_computeOneIteration_add
+                  << " times" << endl;
+        std::cout << "DPC : PEGCompute::computeOneIteration(add) : "
+                  << myTimer::duration_computeOneIteration_add / myTimer::count_computeOneIteration_add << " s" << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration :  PEGCompute::computeOneIteration(delete) : "
+                  << myTimer::duration_computeOneIteration_delete << " s" << endl;
+        std::cout << "test count : PEGCompute::computeOneIteration(delete) : "
+                  << myTimer::count_computeOneIteration_delete << " times" << endl;
+        std::cout << "DPC : PEGCompute::computeOneIteration(delete) : "
+                  << myTimer::duration_computeOneIteration_delete / myTimer::count_computeOneIteration_delete << " s"
+                  << endl;
+        std::cout << std::endl;
+
+        std::cout << "DPC : PEGCompute::computeOneIteration : "
+                  << (myTimer::duration_computeOneIteration_add + myTimer::duration_computeOneIteration_delete) /
+                     (myTimer::count_computeOneIteration_add + myTimer::count_computeOneIteration_delete) << " s"
+                  << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration :  PEGCompute::postProcessOneIteration(add) : "
+                  << myTimer::duration_postProcessOneIteration_add << " s" << endl;
+        std::cout << "test count : PEGCompute::postProcessOneIteration(add) : "
+                  << myTimer::count_postProcessOneIteration_add << " times" << endl;
+        std::cout << "DPC : PEGCompute::postProcessOneIteration(add) : "
+                  << myTimer::duration_postProcessOneIteration_add / myTimer::count_postProcessOneIteration_add << " s"
+                  << endl;
+        std::cout << std::endl;
+
+        std::cout << "test duration :  PEGCompute::postProcessOneIteration(delete) : "
+                  << myTimer::duration_postProcessOneIteration_delete << " s" << endl;
+        std::cout << "test count : PEGCompute::postProcessOneIteration(delete) : "
+                  << myTimer::count_postProcessOneIteration_delete << " times" << endl;
+        std::cout << "DPC : PEGCompute::postProcessOneIteration(delete) : "
+                  << myTimer::duration_postProcessOneIteration_delete / myTimer::count_postProcessOneIteration_delete
+                  << " s" << endl;
+        std::cout << std::endl;
+
+        std::cout << "DPC : PEGCompute::postProcessOneIteration : " <<
+                  (myTimer::duration_postProcessOneIteration_add + myTimer::duration_postProcessOneIteration_delete) /
+                  (myTimer::count_postProcessOneIteration_add + myTimer::count_postProcessOneIteration_delete) << " s"
+                  << endl;
+        std::cout << std::endl;
+
+
+        //print out resource usage
+        std::cout << "\n\n";
+        std::cout << "------------------------------ resource usage ------------------------------" << std::endl;
+        std::cout << rm.result() << std::endl;
+        std::cout << "------------------------------ resource usage ------------------------------" << std::endl;
+        std::cout << "\n\n";
     }
-    else{
-        run_inmemory(1);
-    }
-
-    cout<<endl;
-    auto end_fsm = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> diff_fsm = end_fsm - start_fsm;
-    std::cout << "Running time : " << diff_fsm.count() << " s\n";
-    cout<<endl;
-
-
-    std::cout << "test duration : CFGCompute_syn::combine_synchronous : " << myTimer::duration_combine_synchronous<< " s"<< endl;
-    std::cout << "test count : CFGCompute_syn::combine_synchronous : " << myTimer::count_combine_synchronous<< " times"<< endl;
-    std::cout << "DPC : CFGCompute_syn::combine_synchronous : " << myTimer::duration_combine_synchronous / myTimer::count_combine_synchronous<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration : CFGCompute_syn::transfer : " << myTimer::duration_transfer<< " s"<< endl;
-    std::cout << "test count : CFGCompute_syn::transfer : " << myTimer::count_transfer<< " times"<< endl;
-    std::cout << "DPC : CFGCompute_syn::transfer : " << myTimer::duration_transfer / myTimer::count_transfer<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration : NaiveGraphStore::retrieve : " << myTimer::duration_retrieve<< " s"<< endl;
-    std::cout << "test count : NaiveGraphStore::retrieve : " << myTimer::count_retrieve<< " times"<< endl;
-    std::cout << "DPC : NaiveGraphStore::retrieve : " << myTimer::duration_retrieve / myTimer::count_retrieve<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration : NaiveGraphStore::update : " << myTimer::duration_update << " s"<< endl;
-    std::cout << "test count : NaiveGraphStore::update : " << myTimer::count_update << " times"<< endl;
-    std::cout << "DPC : NaiveGraphStore::update : " << myTimer::duration_update / myTimer::count_update<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration : CFGCompute_syn::peg_compute_add : " << myTimer::duration_peg_compute_add << " s"<< endl;
-    std::cout << "test count : CFGCompute_syn::peg_compute_add : " << myTimer::count_peg_compute_add << " times"<< endl;
-    std::cout << "DPC : CFGCompute_syn::peg_compute_add : " << myTimer::duration_peg_compute_add / myTimer::count_peg_compute_add<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration : CFGCompute_syn::peg_compute_delete : " << myTimer::duration_peg_compute_delete << " s"<< endl;
-    std::cout << "test count : CFGCompute_syn::peg_compute_delete : " << myTimer::count_peg_compute_delete << " times"<< endl;
-    std::cout << "DPC : CFGCompute_syn::peg_compute_delete : " << myTimer::duration_peg_compute_delete / myTimer::count_peg_compute_delete<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration : PEGCompute::startCompute_add : " << myTimer::duration_startCompute_add << " s"<< endl;
-    std::cout << "test count : PEGCompute::startCompute_add : " << myTimer::count_startCompute_add << " times"<< endl;
-    std::cout << "DPC : PEGCompute::startCompute_add : " << myTimer::duration_startCompute_add / myTimer::count_startCompute_add<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration : PEGCompute::startComput_delete : " << myTimer::duration_startCompute_delete << " s"<< endl;
-    std::cout << "test count : PEGCompute::startComput_delete : " << myTimer::count_startCompute_delete << " times"<< endl;
-    std::cout << "DPC : PEGCompute::startCompute_delete : " << myTimer::duration_startCompute_delete / myTimer::count_startCompute_delete<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration :  PEGCompute::computeOneIteration(add) : " << myTimer::duration_computeOneIteration_add << " s"<< endl;
-    std::cout << "test count : PEGCompute::computeOneIteration(add) : " << myTimer::count_computeOneIteration_add << " times"<< endl;
-    std::cout << "DPC : PEGCompute::computeOneIteration(add) : " << myTimer::duration_computeOneIteration_add / myTimer::count_computeOneIteration_add<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration :  PEGCompute::computeOneIteration(delete) : " << myTimer::duration_computeOneIteration_delete << " s"<< endl;
-    std::cout << "test count : PEGCompute::computeOneIteration(delete) : " << myTimer::count_computeOneIteration_delete << " times"<< endl;
-    std::cout << "DPC : PEGCompute::computeOneIteration(delete) : " << myTimer::duration_computeOneIteration_delete / myTimer::count_computeOneIteration_delete<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "DPC : PEGCompute::computeOneIteration : " << (myTimer::duration_computeOneIteration_add + myTimer::duration_computeOneIteration_delete) / (myTimer::count_computeOneIteration_add + myTimer::count_computeOneIteration_delete )<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration :  PEGCompute::postProcessOneIteration(add) : " << myTimer::duration_postProcessOneIteration_add << " s"<< endl;
-    std::cout << "test count : PEGCompute::postProcessOneIteration(add) : " << myTimer::count_postProcessOneIteration_add << " times"<< endl;
-    std::cout << "DPC : PEGCompute::postProcessOneIteration(add) : " << myTimer::duration_postProcessOneIteration_add / myTimer::count_postProcessOneIteration_add<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "test duration :  PEGCompute::postProcessOneIteration(delete) : " << myTimer::duration_postProcessOneIteration_delete << " s"<< endl;
-    std::cout << "test count : PEGCompute::postProcessOneIteration(delete) : " << myTimer::count_postProcessOneIteration_delete << " times"<< endl;
-    std::cout << "DPC : PEGCompute::postProcessOneIteration(delete) : " << myTimer::duration_postProcessOneIteration_delete / myTimer::count_postProcessOneIteration_delete<< " s"<< endl;
-    std::cout<<std::endl;
-
-    std::cout << "DPC : PEGCompute::postProcessOneIteration : " << (myTimer::duration_postProcessOneIteration_add + myTimer::duration_postProcessOneIteration_delete) / (myTimer::count_postProcessOneIteration_add + myTimer::count_postProcessOneIteration_delete )<< " s"<< endl;
-    std::cout<<std::endl;
-
-
-    //print out resource usage
-    std::cout << "\n\n";
-    std::cout << "------------------------------ resource usage ------------------------------" << std::endl;
-    std::cout << rm.result() << std::endl;
-    std::cout << "------------------------------ resource usage ------------------------------" << std::endl;
-    std::cout << "\n\n";
 
     return 0;
 }
 
+void initFile() {
+    File[0].dir = "/home/dell/GraphFlow/GraphSSAInline/firefox/browser/";
+    File[1].dir = "/home/dell/GraphFlow/GraphSSAInline/httpd/";
+    File[2].dir = "/home/dell/GraphFlow/GraphSSAInline/linux/arch/";
+    File[3].dir = "/home/dell/GraphFlow/GraphSSAInline/linux/block/";
+    File[4].dir = "/home/dell/GraphFlow/GraphSSAInline/linux/certs/";
+    File[5].dir = "/home/dell/GraphFlow/GraphSSAInline/linux/crypto/";
+    File[6].dir = "/home/dell/GraphFlow/GraphSSAInline/firefox/accessiable/";
+
+}
 
 
 void compute_ooc(Partition partition, Context* context, int sync_mode){
