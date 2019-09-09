@@ -6,12 +6,14 @@
 #define BACKEND1_FREQUENTITEMSETSTORE_H
 
 
-static const char *const filePath = "../lib/file/intSets.txt";
+#include <string>
+
+static const string filePath = "../lib/file/intSets.txt";
 
 static const int support = 2;
 
 #include "graphstore.h"
-#include "art_linklist.h"
+#include "art.h"
 
 
 
@@ -21,15 +23,26 @@ public:
 
     FrequentItemsetStore();
 
+    void addOneGraph_atomic(PEGraph_Pointer pointer, PEGraph *graph) override;
+
+    void update_graphs(GraphStore *another) override;
+
+    void clearEntryOnly() override;
+
+    void clear() override;
+
+    string toString() override;
+
+protected:
+    void print(std::ostream &str) override;
+
+    void toString_sub(std::ostringstream &strm) override;
+
 private:
 
-    FrequentItemsetStore(vector<set<int>> graphs);
+    FrequentItemsetStore(vector<unordered_set<int>> graphs);
 
     ~FrequentItemsetStore() override;
-
-//    void init(CFG* cfg) {
-//
-//    }
 
     PEGraph *retrieve(PEGraph_Pointer graph_pointer) override;
 
@@ -43,30 +56,33 @@ private:
     void loadGraphStore(const string& file, const string& folder_in) override;
 
 private:
-    std::unordered_map<PEGraph_Pointer, std::set<int>> intToEdgeSet;
-    std::unordered_map<int, set<int>> intToFrequentItemset;
-    std::unordered_map<int, Edge> intToEdge;
-    std::unordered_map<Edge, int> edgeToInt;
-    int frequentItemsetNum;
+    std::unordered_map<PEGraph_Pointer, std::unordered_set<int>> pointerToEdgeIdSet;
+    std::unordered_map<int, unordered_set<int>> intToIdFrequentItemset;
+    std::unordered_map<int, Edge> idToEdge;
+    std::unordered_map<Edge, int> edgeToId;
+    int num_frequentItemset;
     int edgeId;
-    int num_p;
+    int num_pointer;
 
-    PEGraph *convertToPeGraph(set<int> edgeSet);
+    PEGraph *convertToPeGraph(unordered_set<int> edgeSet);
 
-    set<int> convertToEdgeSet(PEGraph *peGraph);
+    unordered_set<int> convertToEdgeSet(PEGraph *peGraph);
 
-    void retrieveSet(set<int> &graphSet, set<int> &realEdgeSet);
+    void retrieveSet(unordered_set<int> &graphSet, unordered_set<int> &realEdgeSet);
 
-    set<int> frequentItemsetMining_closed(int min_support, vector<set<int>> &graphs);
+    unordered_set<int> frequentItemsetMining_closed(vector<unordered_set<int>> &graphs);
 
-    set<int> frequentItemsetMining_minimum(int min_support, vector<set<int>> &graphs);
-
-
-    void writeToFile(vector<set<int>> &graphs);
-
-    set<int> readFromFile();
+    unordered_set<int> frequentItemsetMining_minimum(vector<unordered_set<int>> &graphs);
 
 
+    void writeToFile(vector<unordered_set<int>> &graphs);
+
+    unordered_set<int> readFromFile();
+
+
+    void deserialize(const string &file);
+
+    void load_onebyone(const string &file);
 };
 
 

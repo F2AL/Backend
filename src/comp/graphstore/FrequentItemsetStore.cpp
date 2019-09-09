@@ -5,7 +5,10 @@
 #include "FrequentItemsetStore.h"
 
 void FrequentItemsetStore::loadGraphStore(const string& file, const string& file_in) {
+    this->deserialize(file);
 
+
+    this->load_onebyone(file_in);
 }
 
 
@@ -14,53 +17,45 @@ FrequentItemsetStore::~FrequentItemsetStore() {
 }
 
 PEGraph *FrequentItemsetStore::retrieve_locked(PEGraph_Pointer graph_pointer) {
-
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    return retrieve(graph_pointer);
 }
 
 PEGraph *FrequentItemsetStore::retrieve(PEGraph_Pointer graph_pointer) {
 //    retrieve the pegraph set
-    std::set<int> edgeSet = intToEdgeSet[graph_pointer];
+    std::unordered_set<int> edgeSet = pointerToEdgeIdSet[graph_pointer];
+
+    if(edgeSet.empty())
+        return nullptr;
+
 //    convert it to PEGraph*
     PEGraph *peGraph = convertToPeGraph(edgeSet);
-    return nullptr;
-
-//    if (mapToPEG.find(graph_pointer) != mapToPEG.end()) {
-//        return new PEGraph(mapToPEG[graph_pointer]);
-//    }
-//    mapToPEG[graph_pointer] = new PEGraph();
-//    return new PEGraph();
+    return peGraph;
 }
 
 void FrequentItemsetStore::update(PEGraph_Pointer graph_pointer, PEGraph *pegraph) {
-//    if (mapToPEG.find(graph_pointer) != mapToPEG.end()) {
-//        delete mapToPEG[graph_pointer];
-//    }
-//    mapToPEG[graph_pointer] = new PEGraph(pegraph);
 
-
-//    std::set<Edge>* graphSet = mapToEdgesSet[graph_pointer];
-
-    intToEdgeSet.erase(graph_pointer);
-    // todo delete the pointer
-    std::set<int> edgeSet = convertToEdgeSet(pegraph);
-    intToEdgeSet[graph_pointer] = edgeSet;
+    // todo delete the pointer  ##
+    std::unordered_set<int> edgeSet = convertToEdgeSet(pegraph);
+    pointerToEdgeIdSet[graph_pointer] = edgeSet;
 }
 
 void FrequentItemsetStore::update_locked(PEGraph_Pointer graph_pointer, PEGraph *pegraph) {
-
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    update(graph_pointer, pegraph);
 }
 
 // convert from edgeSet to peGraph*
-PEGraph *FrequentItemsetStore::convertToPeGraph(set<int> edgeSet) {
+PEGraph *FrequentItemsetStore::convertToPeGraph(unordered_set<int> edgeSet) {
     PEGraph *peGraph = new PEGraph;
     std::unordered_map<vertexid_t, EdgeArray> graph;
-    set<int> realGraphSet;
+    unordered_set<int> realGraphSet;
     retrieveSet(edgeSet, realGraphSet);
 
     for (auto edgeId : edgeSet) {
-        vertexid_t src = intToEdge[edgeId].src;
-        vertexid_t dst = intToEdge[edgeId].des;
-        label_t label = intToEdge[edgeId].label;
+        vertexid_t src = idToEdge[edgeId].src;
+        vertexid_t dst = idToEdge[edgeId].des;
+        label_t label = idToEdge[edgeId].label;
         if (graph.find(src) == graph.end()) {
             graph[src] = EdgeArray();
         }
@@ -70,8 +65,8 @@ PEGraph *FrequentItemsetStore::convertToPeGraph(set<int> edgeSet) {
     return peGraph;
 }
 
-set<int> FrequentItemsetStore::convertToEdgeSet(PEGraph *peGraph) {
-    set<int> edgeSet;
+unordered_set<int> FrequentItemsetStore::convertToEdgeSet(PEGraph *peGraph) {
+    unordered_set<int> edgeSet;
     for (auto &it : peGraph->getGraph()) {
 
         int size = it.second.getSize();
@@ -80,50 +75,56 @@ set<int> FrequentItemsetStore::convertToEdgeSet(PEGraph *peGraph) {
         Edge edge;
         for (int i = 0; i < size; ++i) {
             edge = Edge(it.first, edges[i], labels[i]);
-            if (edgeToInt.find(edge) == edgeToInt.end()) {
-                edgeToInt[edge] = edgeId;
-                intToEdge[edgeId++] = edge;
+            if (edgeToId.find(edge) == edgeToId.end()) {
+                edgeToId[edge] = edgeId;
+                idToEdge[edgeId++] = edge;
             }
-            edgeSet.insert(edgeToInt[edge]);
+            edgeSet.insert(edgeToId[edge]);
         }
     }
 
     return edgeSet;
 }
 
-void FrequentItemsetStore::retrieveSet(set<int> &graphSet, set<int> &realEdgeSet) {
+void FrequentItemsetStore::retrieveSet(unordered_set<int> &graphSet, unordered_set<int> &realEdgeSet) {
 
     for (int it : graphSet) {
         if (it >= 0) realEdgeSet.insert(it);
-        else retrieveSet(intToFrequentItemset[it], realEdgeSet);
+        else retrieveSet(intToIdFrequentItemset[it], realEdgeSet);
     }
 }
 
-
-// still under coding
-set<int> FrequentItemsetStore::frequentItemsetMining_closed(int min_support, vector<set<int>> &graphs) {
+/*
+ * 实现思路:
+ * 1. 将信息存储到文件中
+ * 2. 对文件调用 eclat 命令
+ * 3. 将结果的前10行读取进内存中
+ * 4. 对可以进行替换的内容进行替换,并将新的频繁项集记录下来
+ * 5.
+ * */
+unordered_set<int> FrequentItemsetStore::frequentItemsetMining_closed(vector<unordered_set<int>> &graphs) {
     writeToFile(graphs);
 
     system("../lib/eclat -tc ../lib/file/test ../lib/file/out");            // should we stop for a while?
 
-    set<int> v = readFromFile();            // only read the first line
+    unordered_set<int> v = readFromFile();            // only read the first line
     return v;
 }
 
-set<int> FrequentItemsetStore::frequentItemsetMining_minimum(int min_support, vector<set<int>> &graphs) {
+unordered_set<int> FrequentItemsetStore::frequentItemsetMining_minimum(vector<unordered_set<int>> &graphs) {
     writeToFile(graphs);
 
     system("../lib/eclat -tm ../lib/file/test ../lib/file/out");            // should we stop for a while?
 
-    set<int> v = readFromFile();            // only read the first line
+    unordered_set<int> v = readFromFile();            // only read the first line
     return v;
 }
 
 
-FrequentItemsetStore::FrequentItemsetStore() : frequentItemsetNum(0), edgeId(0) {}
+FrequentItemsetStore::FrequentItemsetStore() : num_frequentItemset(0), edgeId(0) {}
 
-FrequentItemsetStore::FrequentItemsetStore(vector<set<int>> graphs) {
-    set<int> frequentItemset = frequentItemsetMining_closed(support, graphs);       //compute the frequent itemset
+FrequentItemsetStore::FrequentItemsetStore(vector<unordered_set<int>> graphs) {
+    unordered_set<int> frequentItemset = frequentItemsetMining_closed(graphs);       //compute the frequent itemset
     while (!frequentItemset.empty()) {
         for (auto &graph: graphs) {
             bool flag = true;           //check if the graphSet need to update
@@ -138,50 +139,89 @@ FrequentItemsetStore::FrequentItemsetStore(vector<set<int>> graphs) {
                 for (auto &elem : frequentItemset) {
                     graph.erase(graph.find(elem));
                 }
-//              insert a special Edge for the num_p
-//                Edge newEdge = Edge(-num_p, 0, 0);
-                int newEdge = -num_p;
-                num_p++;
-                intToFrequentItemset[newEdge] = frequentItemset;
+//              insert a special Edge for the num_pointer
+//                Edge newEdge = Edge(-num_pointer, 0, 0);
+                int newEdge = -num_pointer;
+                num_pointer++;
+                intToIdFrequentItemset[newEdge] = frequentItemset;
                 graph.insert(newEdge);
             }
         }
-        frequentItemset = frequentItemsetMining_closed(support, graphs);
+        frequentItemset = frequentItemsetMining_closed(graphs);
     }
 }
 
-void FrequentItemsetStore::writeToFile(vector<set<int>> &graphs) {
+///
+/// \param graphs 将文件写入 filePath 中去
+void FrequentItemsetStore::writeToFile(vector<unordered_set<int>> &graphs) {
     ofstream output;
     output.open(filePath);
 
-    for (auto graph : graphs) {
-        for (auto edgeId: graph) {
-            cout << edgeId << " ";            // todo check the end of the line
+    for (const auto& graph : graphs) {
+        for (auto _edgeId: graph) {
+            cout << _edgeId << " ";
         }
         cout << endl;
     }
     output.close();
 }
 
-set<int> FrequentItemsetStore::readFromFile() {
-    vector<set<int>> graphs;
+unordered_set<int> FrequentItemsetStore::readFromFile() {
+    vector<unordered_set<int>> graphs;
 
-    ifstream fin;
-    fin.open(filePath);
-    if (!fin) {
+    ifstream finput;
+    finput.open(filePath);
+    if (!finput) {
         cout << "can't load file: " << filePath << endl;
         exit(EXIT_FAILURE);
     }
 
     std::string line;
-    while (getline(fin, line) && line != "") {
-        set<int> graph;
+    while (getline(finput, line) && line != "") {
+        unordered_set<int> graph;
         std::stringstream stream(line);
         int id;
         while (stream >> id) graph.insert(id);
         graphs.push_back(graph);
     }
-    fin.close();
+    return graphs;
+    finput.close();
+}
+
+void FrequentItemsetStore::addOneGraph_atomic(PEGraph_Pointer pointer, PEGraph *graph) {
+
+}
+
+void FrequentItemsetStore::update_graphs(GraphStore *another) {
+
+}
+
+void FrequentItemsetStore::clearEntryOnly() {
+
+}
+
+void FrequentItemsetStore::clear() {
+
+}
+
+string FrequentItemsetStore::toString() {
+    return GraphStore::toString();
+}
+
+void FrequentItemsetStore::print(std::ostream &str) {
+
+}
+
+void FrequentItemsetStore::toString_sub(std::ostringstream &strm) {
+
+}
+
+void FrequentItemsetStore::deserialize(const string &file) {
+
+}
+
+void FrequentItemsetStore::load_onebyone(const string &file) {
+
 }
 
 
